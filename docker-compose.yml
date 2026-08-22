@@ -1,0 +1,62 @@
+services:
+  app:
+    build: .
+    command: php artisan serve --host=0.0.0.0 --port=8000
+    env_file: .env
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    ports: ["8000:8000"]
+    healthcheck:
+      test: ["CMD-SHELL", "php -r \"exit(@file_get_contents(\'http://127.0.0.1:8000/health\') ? 0 : 1);\""]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  queue:
+    build: .
+    command: php artisan queue:work redis --sleep=1 --tries=3 --timeout=120
+    env_file: .env
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    restart: unless-stopped
+  scheduler:
+    build: .
+    command: php artisan schedule:work
+    env_file: .env
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+    restart: unless-stopped
+  ai-service:
+    build: ./ai-service
+    env_file: .env
+    ports: ["8001:8001"]
+    restart: unless-stopped
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-stetech}
+      POSTGRES_USER: ${DB_USERNAME:-stetech}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set_db_password}
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
+    volumes: [redis_data:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+volumes:
+  postgres_data:
+  redis_data:

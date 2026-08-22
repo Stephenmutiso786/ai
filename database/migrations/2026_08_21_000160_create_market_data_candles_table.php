@@ -1,0 +1,3 @@
+<?php
+use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema;
+return new class extends Migration { public function up():void { Schema::create('market_data_candles',function(Blueprint $t){$t->id();$t->string('symbol',32);$t->string('timeframe',16)->default('H1');$t->timestamp('time');$t->decimal('open',20,10);$t->decimal('high',20,10);$t->decimal('low',20,10);$t->decimal('close',20,10);$t->decimal('volume',24,4)->nullable();$t->timestamps();$t->unique(['symbol','timeframe','time']);$t->index(['symbol','timeframe','time']);});} public function down():void{Schema::dropIfExists('market_data_candles');}};
