@@ -192,3 +192,4 @@ The platform includes a Super Admin **Operations** area, persistent health check
 
 ## V16 Trading Workspace
 The production workspace reads STETECH-owned normalized candle data from `market_data_candles`; it does not use TradingView market data for AI or execution. The browser chart uses Lightweight Charts for visualization. Populate this table through the production market-data ingestion service, then run `php artisan migrate`.
+# ai
