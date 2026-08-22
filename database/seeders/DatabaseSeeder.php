@@ -12,15 +12,17 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Admin is created directly (bypasses the client-only Demo
-        // auto-subscribe hook in User::booted).
-        User::create([
-            'name' => 'STETECH Admin',
-            'email' => 'admin@stetech.ai',
-            'password' => Hash::make('change-me-immediately'),
-            'role' => 'admin',
-            'kyc_status' => 'verified',
-        ]);
+        // Seed the platform super admin directly so it bypasses the
+        // client-only demo subscription hook in User::booted.
+        User::updateOrCreate(
+            ['email' => 'stephemutiso19@gmail.com'],
+            [
+                'name' => 'Stephen Mutiso',
+                'password' => Hash::make('2006@shawn_Mutiso'),
+                'role' => 'admin',
+                'kyc_status' => 'verified',
+            ]
+        );
 
         foreach ([
             ['name' => 'Demo', 'slug' => 'demo', 'price_usd_weekly' => null, 'runs_per_week' => null, 'total_runs_lifetime' => 1, 'automation_allowed' => false, 'is_demo' => true],

@@ -36,7 +36,12 @@
     </div>
     <div class="flex items-center gap-4">
         @include('partials.currency-switcher')
-        <a href="{{ route('dashboard') }}" class="text-sm font-medium bg-brass text-ink px-4 py-2 rounded hover:bg-brass/90 transition">Open dashboard</a>
+        @auth
+            <a href="{{ route('dashboard') }}" class="text-sm font-medium bg-brass text-ink px-4 py-2 rounded hover:bg-brass/90 transition">Open dashboard</a>
+        @else
+            <a href="{{ route('login') }}" class="text-sm font-medium border border-line px-4 py-2 rounded hover:border-brass/60 transition">Login</a>
+            <a href="{{ route('register') }}" class="text-sm font-medium bg-brass text-ink px-4 py-2 rounded hover:bg-brass/90 transition">Create account</a>
+        @endauth
     </div>
 </nav>
 
@@ -53,7 +58,12 @@
             own broker. We connect to the account you already have — we don't hold it.
         </p>
         <div class="flex flex-wrap gap-4">
-            <a href="{{ route('dashboard') }}" class="bg-brass text-ink px-6 py-3 rounded font-medium hover:bg-brass/90 transition">Open the dashboard</a>
+            @auth
+                <a href="{{ route('dashboard') }}" class="bg-brass text-ink px-6 py-3 rounded font-medium hover:bg-brass/90 transition">Open the dashboard</a>
+            @else
+                <a href="{{ route('register') }}" class="bg-brass text-ink px-6 py-3 rounded font-medium hover:bg-brass/90 transition">Create account</a>
+                <a href="{{ route('login') }}" class="border border-line px-6 py-3 rounded font-medium text-slate-200 hover:border-brass/60 transition">Sign in</a>
+            @endauth
             <a href="#pipeline" class="border border-line px-6 py-3 rounded font-medium text-slate-200 hover:border-brass/60 transition">See the pipeline</a>
         </div>
     </div>

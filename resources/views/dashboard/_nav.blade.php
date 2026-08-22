@@ -19,6 +19,13 @@
                     <a href="{{ route('admin.settings') }}" class="hover:text-brass">Settings</a>
                 @endif
                 <span class="font-mono text-xs text-slate-300">{{ auth()->user()->name }}</span>
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button class="text-xs uppercase tracking-wide text-muted hover:text-loss">Logout</button>
+                </form>
+            @else
+                <a href="{{ route('login') }}" class="hover:text-slate-100">Login</a>
+                <a href="{{ route('register') }}" class="hover:text-brass">Register</a>
             @endauth
             @include('partials.currency-switcher')
         </div>
