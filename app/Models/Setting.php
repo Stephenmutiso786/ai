@@ -18,19 +18,23 @@ class Setting extends Model
      */
     public static function getValue(string $key, mixed $default = null): mixed
     {
-        $cached = Cache::remember("setting:{$key}", now()->addMinutes(10), function () use ($key) {
-            $row = static::where('key', $key)->first();
+        try {
+            $cached = Cache::remember("setting:{$key}", now()->addMinutes(10), function () use ($key) {
+                $row = static::where('key', $key)->first();
 
-            if (! $row || $row->value_encrypted === null) {
-                return null;
-            }
+                if (! $row || $row->value_encrypted === null) {
+                    return null;
+                }
 
-            try {
-                return Crypt::decryptString($row->value_encrypted);
-            } catch (\Throwable $e) {
-                return null;
-            }
-        });
+                try {
+                    return Crypt::decryptString($row->value_encrypted);
+                } catch (\Throwable $e) {
+                    return null;
+                }
+            });
+        } catch (\Throwable $e) {
+            $cached = null;
+        }
 
         if ($cached !== null && $cached !== '') {
             return $cached;
