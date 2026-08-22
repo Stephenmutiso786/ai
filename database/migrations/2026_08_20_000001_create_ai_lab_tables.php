@@ -23,21 +23,6 @@ return new class extends Migration {
             $table->timestamps();
         });
 
-        Schema::create('ai_models', function (Blueprint $table) {
-            $table->id();
-            $table->string('name');
-            $table->string('version');
-            $table->string('framework')->default('python');
-            $table->enum('status', ['draft','training','trained','validating','paper','shadow','approved','live','retired','failed'])->default('draft');
-            $table->string('artifact_uri')->nullable();
-            $table->json('metrics')->nullable();
-            $table->json('parameters')->nullable();
-            $table->text('notes')->nullable();
-            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
-            $table->timestamps();
-            $table->unique(['name','version']);
-        });
-
         Schema::create('ai_training_runs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('ai_model_id')->constrained()->cascadeOnDelete();
@@ -73,7 +58,6 @@ return new class extends Migration {
     {
         Schema::dropIfExists('ai_backtests');
         Schema::dropIfExists('ai_training_runs');
-        Schema::dropIfExists('ai_models');
         Schema::dropIfExists('ai_datasets');
     }
 };
