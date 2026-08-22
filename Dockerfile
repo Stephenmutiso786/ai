@@ -8,10 +8,10 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 COPY . .
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
-RUN composer dump-autoload --optimize \
-    && mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
+RUN mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
     && chmod -R ug+rw storage bootstrap/cache
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+RUN composer dump-autoload --optimize
 
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
