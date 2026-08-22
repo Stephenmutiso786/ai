@@ -18,16 +18,18 @@
         $plan = $subscription?->plan;
         $limit = $subscription?->effectiveRunsPerWeek();
         $used = $subscription?->runs_used_this_period ?? 0;
+        $planName = $plan?->name ?? 'No plan';
+        $planIsDemo = (bool) ($plan?->is_demo ?? false);
     @endphp
     <div class="bg-panel border border-line rounded-lg p-5 mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
             <p class="font-mono text-[11px] tracking-wide text-muted mb-1">PLAN</p>
             <p class="text-lg">
-                {{ $plan->name ?? 'No plan' }}
+                {{ $planName }}
                 @if($subscription?->hasCustomTerms())<span class="text-brass text-xs font-mono ml-2">CUSTOM TERMS</span>@endif
             </p>
             <p class="text-sm text-muted font-mono mt-1">
-                @if($plan?->is_demo)
+                @if($planIsDemo)
                     1 run, ever, per account & device
                 @elseif($limit === null)
                     Unlimited runs this week
