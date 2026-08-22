@@ -37,17 +37,15 @@ services:
         fromDatabase:
           name: stetech-postgres
           property: password
-      - key: REDIS_HOST
+      - key: REDIS_URL
         fromService:
           name: stetech-redis
-          property: host
-      - key: REDIS_PORT
-        fromService:
-          name: stetech-redis
-          property: port
+          type: keyvalue
+          property: connectionString
       - key: AI_SERVICE_URL
         fromService:
           name: stetech-ai-service
+          type: web
           property: hostport
       - key: APP_KEY
         sync: false
@@ -66,6 +64,8 @@ services:
   - type: keyvalue
     name: stetech-redis
     plan: starter
+    ipAllowList:
+      - source: 0.0.0.0/32
 
 databases:
   - name: stetech-postgres
