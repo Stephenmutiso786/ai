@@ -7,10 +7,8 @@ RUN apt-get update && apt-get install -y libpq-dev unzip git \
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
-COPY composer.json composer.lock* ./
-COPY app/helpers.php app/helpers.php
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 COPY . .
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 RUN composer dump-autoload --optimize \
     && mkdir -p storage/framework/cache/data storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
     && chmod -R ug+rw storage bootstrap/cache
