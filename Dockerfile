@@ -8,6 +8,7 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 COPY composer.json composer.lock* ./
+COPY app/helpers.php app/helpers.php
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 COPY . .
 RUN composer dump-autoload --optimize \
