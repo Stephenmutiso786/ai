@@ -27,7 +27,7 @@ class CountryDetector
             return config('app.dev_default_country', 'KE');
         }
 
-        return Cache::remember("geo:country:{$ip}", now()->addHours(12), function () use ($ip) {
+        return Cache::remember("geo:country:{$ip}", now()->addHours(12), function () use ($ip, $request) {
             return $this->resolveCountryFromIp($ip) ?? $this->fallbackFromAcceptLanguage($request) ?? 'KE';
         });
     }
