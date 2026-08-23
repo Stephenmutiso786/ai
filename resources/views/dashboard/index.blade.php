@@ -3,7 +3,7 @@
 @section('content')
 @include('dashboard._nav')
 
-<div class="max-w-7xl mx-auto px-6 py-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 
     @if(session('status'))
         <div class="mb-6 border border-brass/40 bg-brass/10 text-brass text-sm rounded px-4 py-3">{{ session('status') }}</div>
@@ -22,7 +22,7 @@
         $brokerLimit = $plan?->broker_connections_limit;
         $brokerCount = auth()->user()->brokerAccounts()->count();
     @endphp
-    <div class="bg-panel border border-line rounded-lg p-5 mb-8 flex flex-wrap items-center justify-between gap-4">
+    <div class="bg-panel border border-line rounded-lg p-4 sm:p-5 mb-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
             <p class="font-mono text-[11px] tracking-wide text-muted mb-1">PLAN</p>
             <p class="text-lg">
@@ -52,7 +52,7 @@
     </div>
 
     <!-- Account summary -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         @php
             $summary = [
                 ['Balance', $brokerAccount?->balance ? number_format((float) $brokerAccount->balance, 2) : '—', null],
@@ -69,7 +69,7 @@
         @endforeach
     </div>
 
-    <div class="grid lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- AI Market Status -->
         <div class="lg:col-span-2 bg-panel border border-line rounded-lg overflow-hidden">
             <div class="flex items-center justify-between px-5 py-3 border-b border-line">
@@ -79,16 +79,16 @@
             <div class="divide-y divide-line">
                 @forelse ($instruments as $instrument)
                     @php $signal = $instrument->latestSignal; @endphp
-                    <div class="flex items-center justify-between px-5 py-3.5">
-                        <span class="font-mono text-sm w-20">{{ $instrument->symbol }}</span>
+                    <div class="flex flex-wrap items-center gap-2 px-4 sm:px-5 py-3.5">
+                        <span class="font-mono text-sm w-20 shrink-0">{{ $instrument->symbol }}</span>
                         @if($signal)
                             <span class="font-mono text-xs px-2 py-0.5 rounded border w-16 text-center
                                 {{ $signal->direction === 'buy' ? 'border-gain/40 text-gain' : ($signal->direction === 'sell' ? 'border-loss/40 text-loss' : 'border-line text-muted') }}">
                                 {{ strtoupper($signal->direction) }}</span>
-                            <div class="flex-1 mx-4 h-1.5 bg-line rounded-full overflow-hidden">
+                            <div class="flex-1 min-w-[120px] h-1.5 bg-line rounded-full overflow-hidden">
                                 <div class="h-full {{ $signal->direction === 'buy' ? 'bg-gain' : ($signal->direction === 'sell' ? 'bg-loss' : 'bg-muted') }}" style="width: {{ $signal->confidence }}%"></div>
                             </div>
-                            <span class="font-mono text-xs text-muted w-10 text-right">{{ $signal->confidence }}%</span>
+                            <span class="font-mono text-xs text-muted w-10 text-right shrink-0">{{ $signal->confidence }}%</span>
                         @else
                             <span class="font-mono text-xs text-muted">no signal yet</span>
                         @endif
@@ -104,7 +104,7 @@
 
         <!-- Risk profile + broker -->
         <div class="space-y-6">
-            <div class="bg-panel border border-line rounded-lg p-5">
+            <div class="bg-panel border border-line rounded-lg p-4 sm:p-5">
                 <p class="font-mono text-[11px] tracking-wide text-muted mb-4">RISK PROFILE</p>
                 @if($riskProfile)
                     <dl class="space-y-2.5 font-mono text-sm">
@@ -118,7 +118,7 @@
                 @endif
             </div>
 
-            <div class="bg-panel border border-line rounded-lg p-5">
+            <div class="bg-panel border border-line rounded-lg p-4 sm:p-5">
                 <p class="font-mono text-[11px] tracking-wide text-muted mb-4">BROKER ACCOUNT</p>
                 @if($brokerAccount)
                     <p class="text-sm mb-1">{{ $brokerAccount->broker }} · {{ $brokerAccount->platform }}</p>

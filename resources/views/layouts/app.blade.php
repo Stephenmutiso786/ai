@@ -31,7 +31,7 @@
     </script>
     <style>body{background:#0B0E14;}</style>
 </head>
-<body class="font-body text-slate-100 antialiased">
+<body class="font-body text-slate-100 antialiased overflow-x-hidden">
     @yield('content')
 </body>
 </html>

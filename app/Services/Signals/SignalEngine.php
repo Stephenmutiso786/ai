@@ -10,8 +10,15 @@ class SignalEngine
     public function __construct(private AiSignalClient $client) {}
     public function generateFor(Instrument $instrument, string $timeframe = 'H1'): AiSignal
     {
-        $model = AiModel::query()->where('status','live')->latest('updated_at')->first();
-        if (! $model) throw new \RuntimeException('No approved live AI model is deployed.');
+        $model = AiModel::query()
+            ->whereIn('status', ['live', 'approved', 'paper', 'shadow', 'trained', 'validating'])
+            ->orderByRaw("CASE status WHEN 'live' THEN 0 WHEN 'approved' THEN 1 WHEN 'paper' THEN 2 WHEN 'shadow' THEN 3 WHEN 'trained' THEN 4 WHEN 'validating' THEN 5 ELSE 6 END")
+            ->latest('updated_at')
+            ->first();
+
+        if (! $model) {
+            throw new \RuntimeException('No AI model is available. Create or deploy a model in AI Lab first.');
+        }
         $signal = $this->client->liveSignal($model, $instrument->symbol, $timeframe);
         return AiSignal::create([
             'instrument_id'=>$instrument->id,'direction'=>$signal['direction'],'confidence'=>$signal['confidence'],
