@@ -9,13 +9,20 @@ class BrokerAccount extends Model
     protected $fillable = [
         'user_id', 'broker', 'platform', 'server', 'account_number',
         'trading_mode', 'connection_status', 'connected_at', 'verified_at',
+        'balance', 'equity', 'margin_available', 'currency',
     ];
 
     protected $hidden = ['credential_payload_encrypted'];
 
     protected function casts(): array
     {
-        return ['connected_at' => 'datetime', 'verified_at' => 'datetime'];
+        return [
+            'connected_at' => 'datetime',
+            'verified_at' => 'datetime',
+            'balance' => 'decimal:2',
+            'equity' => 'decimal:2',
+            'margin_available' => 'decimal:2',
+        ];
     }
 
     public function user()

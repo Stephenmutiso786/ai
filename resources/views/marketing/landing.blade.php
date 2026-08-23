@@ -165,18 +165,16 @@
         @php
             $converter = app(\App\Services\Currency\CurrencyConverter::class);
             $tiers = [
-                ['Demo', null, true, '1 run, ever', 'Signals only'],
                 ['Basic', 9, false, '6 runs/week', 'Signals only'],
                 ['Standard', 15, false, '12 runs/week', 'Automation enabled'],
                 ['Pro', null, false, 'Unlimited runs/week', 'Automation enabled'],
             ];
         @endphp
         @foreach ($tiers as [$name,$priceUsd,$isDemo,$runsLabel,$auto])
-            <div class="border rounded-lg p-6 transition {{ $isDemo ? 'border-brass/50 bg-brass/5' : 'border-line hover:border-brass/50' }}">
+            <div class="border rounded-lg p-6 transition border-line hover:border-brass/50">
                 <h3 class="font-medium text-lg mb-1">{{ $name }}</h3>
                 <p class="font-mono text-2xl mb-4">
-                    @if($isDemo) Free
-                    @elseif(is_null($priceUsd)) Contact us
+                    @if(is_null($priceUsd)) Contact us
                     @else {{ $converter->format($priceUsd, $currentCurrency) }}<span class="text-muted text-sm">/week</span>
                     @endif
                 </p>

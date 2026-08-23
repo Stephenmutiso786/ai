@@ -2,7 +2,6 @@
 
 namespace App\Services\Usage;
 
-use App\Models\DemoDeviceUsage;
 use App\Models\Subscription;
 use App\Models\UsageRun;
 use App\Models\User;
@@ -19,10 +18,6 @@ class RunLimiter
         }
 
         $plan = $subscription->plan;
-
-        if ($plan->is_demo) {
-            return $this->checkDemo($user, $subscription, $request);
-        }
 
         $this->resetWindowIfElapsed($subscription);
 
@@ -46,40 +41,9 @@ class RunLimiter
             'ip_address' => $request->ip(),
         ]);
 
-        if ($subscription && ! $subscription->plan->is_demo) {
+        if ($subscription) {
             $subscription->increment('runs_used_this_period');
         }
-
-        if ($subscription && $subscription->plan->is_demo) {
-            $hash = $this->fingerprint->resolve($request);
-            DemoDeviceUsage::firstOrCreate(
-                ['device_hash' => $hash],
-                [
-                    'user_id' => $user->id,
-                    'ip_address' => $request->ip(),
-                    'user_agent' => $request->userAgent(),
-                    'used_at' => now(),
-                ]
-            );
-        }
-    }
-
-    protected function checkDemo(User $user, Subscription $subscription, Request $request): RunCheckResult
-    {
-        $alreadyUsedByAccount = UsageRun::where('user_id', $user->id)
-            ->where('subscription_id', $subscription->id)
-            ->exists();
-
-        if ($alreadyUsedByAccount) {
-            return RunCheckResult::deny('Your demo run has already been used on this account. Upgrade to keep going.');
-        }
-
-        $hash = $this->fingerprint->resolve($request);
-        if (DemoDeviceUsage::where('device_hash', $hash)->exists()) {
-            return RunCheckResult::deny('This device has already used its one-time demo run. Upgrade to keep going.');
-        }
-
-        return RunCheckResult::allow(1);
     }
 
     protected function resetWindowIfElapsed(Subscription $subscription): void

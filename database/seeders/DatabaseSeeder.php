@@ -25,8 +25,9 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
+        SubscriptionPlan::where('slug', 'demo')->delete();
+
         foreach ([
-            ['name' => 'Demo', 'slug' => 'demo', 'price_usd_weekly' => null, 'runs_per_week' => null, 'total_runs_lifetime' => 1, 'automation_allowed' => false, 'is_demo' => true],
             ['name' => 'Basic', 'slug' => 'basic', 'price_usd_weekly' => 9, 'runs_per_week' => 6, 'total_runs_lifetime' => null, 'automation_allowed' => false, 'broker_connections_limit' => 1],
             ['name' => 'Standard', 'slug' => 'standard', 'price_usd_weekly' => 15, 'runs_per_week' => 12, 'total_runs_lifetime' => null, 'automation_allowed' => true, 'broker_connections_limit' => 4],
             // Pro's price wasn't specified -- seeded null ("Contact us") and

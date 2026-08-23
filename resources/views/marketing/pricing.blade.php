@@ -18,19 +18,16 @@
     <h1 class="font-display text-5xl mb-4">Runs per week, not looser risk limits.</h1>
     <p class="text-muted max-w-2xl mb-14 leading-relaxed">
         Every tier runs under the same hard-coded risk engine. Higher plans unlock more
-        AI runs per week and automation — not bigger promises. Try one run free, no card required.
+        AI runs per week and automation — not bigger promises.
     </p>
 
     @php $converter = app(\App\Services\Currency\CurrencyConverter::class); @endphp
     <div class="grid md:grid-cols-4 gap-5">
         @foreach ($plans as $plan)
-            <div class="border rounded-lg p-6 flex flex-col transition
-                {{ $plan->is_demo ? 'border-brass/50 bg-brass/5' : 'border-line hover:border-brass/50' }}">
+            <div class="border rounded-lg p-6 flex flex-col transition border-line hover:border-brass/50">
                 <h3 class="font-medium text-lg mb-1">{{ $plan->name }}</h3>
                 <p class="font-mono text-2xl mb-6">
-                    @if($plan->is_demo)
-                        Free
-                    @elseif(is_null($plan->price_usd_weekly))
+                    @if(is_null($plan->price_usd_weekly))
                         Contact us
                     @else
                         {{ $converter->format($plan->price_usd_weekly, $currentCurrency) }}<span class="text-muted text-sm">/week</span>
@@ -40,17 +37,14 @@
                     <li class="flex justify-between">
                         <span>Runs</span>
                         <span class="text-slate-200">
-                            @if($plan->is_demo) 1, ever
-                            @elseif(is_null($plan->runs_per_week)) Unlimited
+                            @if(is_null($plan->runs_per_week)) Unlimited
                             @else {{ $plan->runs_per_week }}/week
                             @endif
                         </span>
                     </li>
                     <li class="flex justify-between"><span>Automation</span><span class="text-slate-200">{{ $plan->automation_allowed ? 'Yes' : 'Signals only' }}</span></li>
                 </ul>
-                @if($plan->is_demo)
-                    <a href="{{ route('dashboard') }}" class="text-center border border-line rounded py-2.5 text-sm hover:border-brass/60 hover:text-brass transition">Try the demo run</a>
-                @elseif(auth()->check())
+                @if(auth()->check())
                     <a href="{{ route('payments.show', $plan) }}" class="text-center border border-line rounded py-2.5 text-sm hover:border-brass/60 hover:text-brass transition">Choose {{ $plan->name }}</a>
                 @else
                     <a href="{{ route('login') }}" class="text-center border border-line rounded py-2.5 text-sm hover:border-brass/60 hover:text-brass transition">Sign in to choose {{ $plan->name }}</a>

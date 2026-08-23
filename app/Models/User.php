@@ -69,7 +69,7 @@ class User extends Authenticatable
 
     protected static function booted(): void
     {
-        // Every new client starts on the Demo plan automatically -- no
+        // Every new client starts on a real plan automatically -- no
         // signup flow should ever leave a user without a subscription
         // row, since RunLimiter treats "no subscription" as zero access.
         static::created(function (self $user) {
@@ -77,13 +77,15 @@ class User extends Authenticatable
                 return;
             }
 
-            $demo = SubscriptionPlan::firstOrCreate(
-                ['slug' => 'demo'],
-                ['name' => 'Demo', 'price_usd_weekly' => null, 'runs_per_week' => null, 'total_runs_lifetime' => 1, 'is_demo' => true]
-            );
+            $plan = SubscriptionPlan::where('slug', 'basic')->where('is_active', true)->first()
+                ?? SubscriptionPlan::where('is_active', true)->where('is_custom_template', false)->orderBy('price_usd_weekly')->first();
+
+            if (! $plan) {
+                return;
+            }
 
             $user->subscription()->create([
-                'subscription_plan_id' => $demo->id,
+                'subscription_plan_id' => $plan->id,
                 'status' => 'active',
                 'current_period_start' => now(),
                 'current_period_end' => now()->addYears(10),

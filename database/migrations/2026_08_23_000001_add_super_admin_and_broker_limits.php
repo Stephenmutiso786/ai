@@ -18,12 +18,17 @@ return new class extends Migration
 
         Schema::table('broker_accounts', function (Blueprint $table) {
             $table->timestamp('verified_at')->nullable()->after('connected_at');
+            $table->decimal('balance', 18, 2)->nullable()->after('verified_at');
+            $table->decimal('equity', 18, 2)->nullable()->after('balance');
+            $table->decimal('margin_available', 18, 2)->nullable()->after('equity');
+            $table->string('currency', 12)->nullable()->after('margin_available');
         });
     }
 
     public function down(): void
     {
         Schema::table('broker_accounts', function (Blueprint $table) {
+            $table->dropColumn(['balance', 'equity', 'margin_available', 'currency']);
             $table->dropColumn('verified_at');
         });
 

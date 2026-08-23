@@ -19,7 +19,6 @@
         $limit = $subscription?->effectiveRunsPerWeek();
         $used = $subscription?->runs_used_this_period ?? 0;
         $planName = $plan?->name ?? 'No plan';
-        $planIsDemo = (bool) ($plan?->is_demo ?? false);
         $brokerLimit = $plan?->broker_connections_limit;
         $brokerCount = auth()->user()->brokerAccounts()->count();
     @endphp
@@ -31,9 +30,7 @@
                 @if($subscription?->hasCustomTerms())<span class="text-brass text-xs font-mono ml-2">CUSTOM TERMS</span>@endif
             </p>
             <p class="text-sm text-muted font-mono mt-1">
-                @if($planIsDemo)
-                    1 run, ever, per account & device
-                @elseif($limit === null)
+                @if($limit === null)
                     Unlimited runs this week
                 @else
                     {{ $used }} / {{ $limit }} runs used this week
@@ -58,10 +55,10 @@
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         @php
             $summary = [
-                ['Balance', '$1,250.00', null],
-                ['Equity', '$1,284.30', 'gain'],
-                ["Today's P/L", '+$34.10', 'gain'],
-                ['Drawdown', '2.1%', null],
+                ['Balance', $brokerAccount?->balance ? number_format((float) $brokerAccount->balance, 2) : '—', null],
+                ['Equity', $brokerAccount?->equity ? number_format((float) $brokerAccount->equity, 2) : '—', 'gain'],
+                ['Margin available', $brokerAccount?->margin_available ? number_format((float) $brokerAccount->margin_available, 2) : '—', null],
+                ['Currency', $brokerAccount?->currency ?? '—', null],
             ];
         @endphp
         @foreach ($summary as [$label,$val,$tone])
@@ -142,7 +139,7 @@
 
     <!-- Open trades -->
     <div class="mt-6 bg-panel border border-line rounded-lg overflow-hidden">
-        <div class="px-5 py-3 border-b border-line font-mono text-[11px] tracking-[0.15em] text-muted">OPEN TRADES (PAPER)</div>
+        <div class="px-5 py-3 border-b border-line font-mono text-[11px] tracking-[0.15em] text-muted">OPEN TRADES</div>
         <div class="divide-y divide-line">
             @forelse ($openTrades as $trade)
                 <div class="flex items-center justify-between px-5 py-3 text-sm">

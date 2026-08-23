@@ -55,11 +55,11 @@
                 </div>
                 <div class="w-36">
                     <label class="font-mono text-[11px] text-muted block mb-1">PRICE (USD/WK)</label>
-                    <input type="number" name="price_usd_weekly" value="{{ $plan->price_usd_weekly }}" placeholder="blank = contact us" {{ $plan->is_demo ? 'disabled' : '' }} class="w-full bg-ink border border-line rounded px-2.5 py-2 text-sm font-mono focus:border-brass outline-none disabled:opacity-40">
+                    <input type="number" name="price_usd_weekly" value="{{ $plan->price_usd_weekly }}" placeholder="blank = contact us" class="w-full bg-ink border border-line rounded px-2.5 py-2 text-sm font-mono focus:border-brass outline-none">
                 </div>
                 <div class="w-36">
                     <label class="font-mono text-[11px] text-muted block mb-1">RUNS/WEEK</label>
-                    <input type="number" name="runs_per_week" value="{{ $plan->runs_per_week }}" placeholder="blank = unlimited" {{ $plan->is_demo ? 'disabled' : '' }} class="w-full bg-ink border border-line rounded px-2.5 py-2 text-sm font-mono focus:border-brass outline-none disabled:opacity-40">
+                    <input type="number" name="runs_per_week" value="{{ $plan->runs_per_week }}" placeholder="blank = unlimited" class="w-full bg-ink border border-line rounded px-2.5 py-2 text-sm font-mono focus:border-brass outline-none">
                 </div>
                 <div class="w-40">
                     <label class="font-mono text-[11px] text-muted block mb-1">BROKER LIMIT</label>
