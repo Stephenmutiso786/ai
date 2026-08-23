@@ -22,7 +22,10 @@
             </div>
             <div>
                 <label class="block text-sm text-muted mb-2">Password</label>
-                <input name="password" type="password" required class="w-full bg-ink border border-line rounded px-4 py-3 outline-none focus:border-brass">
+                <div class="relative">
+                    <input id="login-password" name="password" type="password" required class="w-full bg-ink border border-line rounded px-4 py-3 pr-12 outline-none focus:border-brass">
+                    <button type="button" id="toggle-login-password" class="absolute inset-y-0 right-0 px-3 text-muted hover:text-slate-100" aria-label="Toggle password visibility">👁</button>
+                </div>
             </div>
             <label class="flex items-center gap-2 text-sm text-muted">
                 <input type="checkbox" name="remember" class="accent-brass">
@@ -36,5 +39,13 @@
         </p>
     </div>
 </div>
+<script>
+const loginPassword = document.getElementById('login-password');
+const toggleLoginPassword = document.getElementById('toggle-login-password');
+if (loginPassword && toggleLoginPassword) {
+    toggleLoginPassword.addEventListener('click', () => {
+        loginPassword.type = loginPassword.type === 'password' ? 'text' : 'password';
+    });
+}
+</script>
 @endsection
-

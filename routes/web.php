@@ -34,19 +34,19 @@ Route::get('/payment/{subscription}/success', [PaymentController::class, 'succes
 Route::get('/payment/{subscription}/mpesa-waiting', [PaymentController::class, 'mpesaWaiting'])->middleware('auth')->name('payment.mpesa.waiting');
 Route::get('/payment/{subscription}/status', [PaymentController::class, 'pollStatus'])->middleware('auth')->name('payment.mpesa.status');
 
-Route::middleware(['auth', 'market.open'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::post('/run', [SignalRunController::class, 'run'])->name('run.trigger');
+    Route::post('/run', [SignalRunController::class, 'run'])->middleware('market.open')->name('run.trigger');
 
     Route::get('/broker/connect', [BrokerAccountController::class, 'create'])->name('broker.connect');
-    Route::post('/broker/connect', [BrokerAccountController::class, 'store'])->name('broker.store');
+    Route::post('/broker/connect', [BrokerAccountController::class, 'store'])->middleware('market.open')->name('broker.store');
     Route::get('/trading-workspace', [TradingWorkspaceController::class, 'index'])->name('trading.workspace');
     Route::get('/api/workspace/candles', [TradingWorkspaceController::class, 'candles'])->name('workspace.candles');
     Route::get('/api/workspace/positions', [TradingWorkspaceController::class, 'positions'])->name('workspace.positions');
     Route::get('/api/workspace/performance', [TradingWorkspaceController::class, 'performance'])->name('workspace.performance');
 
-    Route::post('/broker/{account}/test', [BrokerConnectorController::class, 'test'])->name('broker.test');
-    Route::get('/broker/{account}/snapshot', [BrokerConnectorController::class, 'snapshot'])->name('broker.snapshot');
+    Route::post('/broker/{account}/test', [BrokerConnectorController::class, 'test'])->middleware('market.open')->name('broker.test');
+    Route::get('/broker/{account}/snapshot', [BrokerConnectorController::class, 'snapshot'])->middleware('market.open')->name('broker.snapshot');
 
     Route::get('/custom-package', [CustomPlanRequestController::class, 'create'])->name('custom-package.create');
     Route::post('/custom-package', [CustomPlanRequestController::class, 'store'])->name('custom-package.store');
