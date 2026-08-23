@@ -7,9 +7,9 @@
     <p class="font-mono text-xs tracking-[0.2em] text-brass mb-3">BROKER CONNECTION</p>
     <h1 class="font-display text-3xl mb-2">Connect your MT5 account</h1>
     <p class="text-sm text-muted mb-8 leading-relaxed">
-        This saves your account details in a pending state. It does not attempt a live
-        connection — that goes through your broker's supported API once a real
-        adapter is enabled, not a stored terminal password.
+        Your subscribed plan decides how this broker connection is configured.
+        The app will lock the mode to the plan's allowed level so the account
+        cannot be connected in the wrong trading mode.
     </p>
 
     @if ($errors->any())
@@ -36,11 +36,18 @@
         </div>
         <div>
             <label class="font-mono text-xs text-muted block mb-1.5">TRADING MODE</label>
-            <select name="trading_mode" class="w-full bg-panel border border-line rounded px-3 py-2.5 text-sm focus:border-brass outline-none">
-                <option value="signals_only">Signals only</option>
-                <option value="semi_automatic">Semi-automatic (you confirm each trade)</option>
-                <option value="fully_automatic">Fully automatic</option>
-            </select>
+            <div class="w-full bg-panel border border-line rounded px-3 py-2.5 text-sm text-slate-200">
+                {{ ucfirst(str_replace('_', ' ', $recommendedTradingMode)) }}
+            </div>
+            <p class="text-xs text-muted mt-1.5">
+                @if($isSuperAdmin)
+                    Super admin accounts can be configured for fully automatic execution.
+                @elseif($plan)
+                    {{ $plan->name }} plan allows up to {{ $recommendedTradingMode === 'signals_only' ? 'signals only' : ($recommendedTradingMode === 'semi_automatic' ? 'semi-automatic' : 'fully automatic') }}.
+                @else
+                    No active plan found, so the system will keep this on signals only.
+                @endif
+            </p>
         </div>
         <button type="submit" class="w-full bg-brass text-ink rounded py-2.5 text-sm font-medium hover:bg-brass/90 transition">Save connection</button>
     </form>

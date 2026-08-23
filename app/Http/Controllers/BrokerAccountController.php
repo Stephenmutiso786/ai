@@ -11,7 +11,16 @@ class BrokerAccountController extends Controller
 {
     public function create()
     {
-        return view('dashboard.broker-connect');
+        $user = Auth::user();
+        $plan = $user->subscription?->plan;
+
+        return view('dashboard.broker-connect', [
+            'recommendedTradingMode' => $user->isSuperAdmin()
+                ? 'fully_automatic'
+                : ($plan?->recommendedTradingMode() ?? 'signals_only'),
+            'plan' => $plan,
+            'isSuperAdmin' => $user->isSuperAdmin(),
+        ]);
     }
 
     public function store(Request $request)
@@ -20,13 +29,21 @@ class BrokerAccountController extends Controller
             'broker' => 'required|string|max:100',
             'server' => 'required|string|max:100',
             'account_number' => 'required|string|max:50',
-            'trading_mode' => 'required|in:signals_only,semi_automatic,fully_automatic',
         ]);
 
         $user = Auth::user();
         $activePlan = $user->subscription?->plan;
         $limit = $user->isSuperAdmin() ? null : $activePlan?->broker_connections_limit;
         $currentConnections = $user->brokerAccounts()->count();
+        $tradingMode = $user->isSuperAdmin()
+            ? 'fully_automatic'
+            : ($activePlan?->recommendedTradingMode() ?? 'signals_only');
+
+        if ($activePlan && ! $user->isSuperAdmin() && ! $activePlan->allowsTradingMode($tradingMode)) {
+            throw ValidationException::withMessages([
+                'broker' => "Your {$activePlan->name} plan does not allow {$tradingMode} connections.",
+            ]);
+        }
 
         if (! $user->isSuperAdmin() && $limit !== null && $currentConnections >= $limit) {
             throw ValidationException::withMessages([
@@ -40,7 +57,7 @@ class BrokerAccountController extends Controller
             'platform' => 'MT5',
             'server' => $data['server'],
             'account_number' => $data['account_number'],
-            'trading_mode' => $data['trading_mode'],
+            'trading_mode' => $tradingMode,
             'connection_status' => 'connected',
             'connected_at' => now(),
             'verified_at' => now(),
@@ -48,6 +65,6 @@ class BrokerAccountController extends Controller
         $account->save();
 
         return redirect()->route('dashboard')
-            ->with('status', 'Broker account connected and verified successfully.');
+            ->with('status', 'Broker account connected as '.$tradingMode.' and verified successfully.');
     }
 }

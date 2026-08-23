@@ -71,7 +71,15 @@ class ExecutionEngine
             throw new \RuntimeException('LIVE_TRADING_ENABLED is not set to true -- refusing to place a live order regardless of broker_execution_mode.');
         }
 
-        if (! $brokerAccount || $brokerAccount->trading_mode !== 'fully_automatic') throw new \RuntimeException('Broker account is not authorized for fully automatic execution.');
+        if (! $brokerAccount || $brokerAccount->trading_mode !== 'fully_automatic') {
+            throw new \RuntimeException('Broker account is not authorized for fully automatic execution.');
+        }
+
+        $plan = $user->subscription?->plan;
+        if ($plan && ! $plan->allowsTradingMode('fully_automatic')) {
+            throw new \RuntimeException("The {$plan->name} plan does not allow fully automatic execution.");
+        }
+
         $adapter = app(\App\Services\Execution\BrokerAdapterRegistry::class)->for($brokerAccount);
         $symbol = app(\App\Services\Execution\SymbolNormalizer::class)->toBroker($brokerAccount, $signal->instrument->symbol);
         $result=$adapter->placeOrder($brokerAccount,$symbol,$signal->direction,$decision->lotSize,$signal->stop_loss,$signal->take_profit);

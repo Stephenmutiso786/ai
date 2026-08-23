@@ -26,4 +26,23 @@ class SubscriptionPlan extends Model
     {
         return is_null($this->runs_per_week) && is_null($this->total_runs_lifetime);
     }
+
+    public function recommendedTradingMode(): string
+    {
+        if (! $this->automation_allowed) {
+            return 'signals_only';
+        }
+
+        return $this->slug === 'pro' ? 'fully_automatic' : 'semi_automatic';
+    }
+
+    public function allowsTradingMode(string $mode): bool
+    {
+        return match ($this->recommendedTradingMode()) {
+            'signals_only' => $mode === 'signals_only',
+            'semi_automatic' => in_array($mode, ['signals_only', 'semi_automatic'], true),
+            'fully_automatic' => in_array($mode, ['signals_only', 'semi_automatic', 'fully_automatic'], true),
+            default => false,
+        };
+    }
 }
