@@ -30,6 +30,9 @@ Route::post('/payments/mpesa/callback', [PaymentController::class, 'mpesaCallbac
 Route::post('/payments/stripe/webhook', [PaymentController::class, 'stripeWebhook'])->name('payments.stripe.webhook');
 Route::get('/payments/stripe/success', [PaymentController::class, 'stripeSuccess'])->middleware('auth')->name('payments.stripe.success');
 Route::get('/payments/cancelled', [PaymentController::class, 'cancelled'])->name('payments.cancelled');
+Route::get('/payment/{subscription}/success', [PaymentController::class, 'success'])->middleware('auth')->name('payment.success');
+Route::get('/payment/{subscription}/mpesa-waiting', [PaymentController::class, 'mpesaWaiting'])->middleware('auth')->name('payment.mpesa.waiting');
+Route::get('/payment/{subscription}/status', [PaymentController::class, 'pollStatus'])->middleware('auth')->name('payment.mpesa.status');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');

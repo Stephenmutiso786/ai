@@ -11,13 +11,24 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
-    protected $fillable = ['name', 'email', 'password', 'role', 'kyc_status'];
+    protected $fillable = [
+        'name', 'email', 'password', 'role', 'kyc_status',
+        'two_factor_secret', 'two_factor_recovery_codes', 'two_factor_confirmed_at',
+    ];
 
-    protected $hidden = ['password', 'remember_token'];
+    protected $hidden = [
+        'password',
+        'remember_token',
+        'two_factor_secret',
+        'two_factor_recovery_codes',
+    ];
 
     protected function casts(): array
     {
-        return ['email_verified_at' => 'datetime'];
+        return [
+            'email_verified_at' => 'datetime',
+            'two_factor_confirmed_at' => 'datetime',
+        ];
     }
 
     public function isAdmin(): bool
@@ -43,6 +54,11 @@ class User extends Authenticatable
     public function trades()
     {
         return $this->hasMany(Trade::class);
+    }
+
+    public function twoFactorEnabled(): bool
+    {
+        return ! empty($this->two_factor_secret) && ! empty($this->two_factor_confirmed_at);
     }
 
     protected static function booted(): void

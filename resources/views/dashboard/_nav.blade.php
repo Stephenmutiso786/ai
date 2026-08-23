@@ -9,6 +9,7 @@
             <a href="{{ route('broker.connect') }}" class="hover:text-slate-100">Broker</a>
             <a href="{{ route('custom-package.create') }}" class="hover:text-slate-100">Custom package</a>
             @auth
+                <a href="{{ route('two-factor.show') }}" class="hover:text-slate-100">Two-factor</a>
                 @if(auth()->user()->isAdmin())
                     <span class="w-px h-4 bg-line"></span>
                     <a href="{{ route('admin.control-center') }}" class="hover:text-brass">Control center</a>

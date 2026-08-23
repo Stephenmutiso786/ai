@@ -1,6 +1,6 @@
 <?php
 namespace App\Http\Controllers;
-use App\Models\PaymentTransaction; use App\Models\SubscriptionPlan; use App\Services\Payments\MpesaDarajaGateway; use App\Services\Payments\StripeGateway; use App\Services\Payments\SubscriptionActivator; use Illuminate\Http\Request; use Illuminate\Support\Facades\Auth; use Illuminate\Support\Str;
+use App\Models\PaymentTransaction; use App\Models\Subscription; use App\Models\SubscriptionPlan; use App\Services\Payments\MpesaDarajaGateway; use App\Services\Payments\StripeGateway; use App\Services\Payments\SubscriptionActivator; use Illuminate\Http\Request; use Illuminate\Support\Facades\Auth; use Illuminate\Support\Str;
 class PaymentController extends Controller {
  public function show(Request $r, SubscriptionPlan $plan){ abort_unless($plan->is_active && $plan->price_usd_weekly!==null,404); return view('payments.checkout', compact('plan')); }
  public function checkout(Request $r){ $data=$r->validate(['plan'=>'required|exists:subscription_plans,id','provider'=>'required|in:mpesa,stripe','phone'=>'nullable|string']); $plan=SubscriptionPlan::findOrFail($data['plan']); abort_unless($plan->is_active && $plan->price_usd_weekly!==null,422,'This plan cannot be purchased online.');
@@ -21,4 +21,7 @@ class PaymentController extends Controller {
   return response()->json(['received'=>true]);
  }
  public function cancelled(){return redirect()->route('pricing')->with('run_error','Payment was cancelled.');}
+ public function success(Subscription $subscription){ abort_if($subscription->user_id !== auth()->id(), 403); return view('payment.success', compact('subscription')); }
+ public function mpesaWaiting(Subscription $subscription){ abort_if($subscription->user_id !== auth()->id(), 403); return view('payment.mpesa-waiting', compact('subscription')); }
+ public function pollStatus(Subscription $subscription){ abort_if($subscription->user_id !== auth()->id(), 403); return response()->json(['status'=>$subscription->fresh()->status]); }
 }
