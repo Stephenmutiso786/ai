@@ -30,7 +30,9 @@ class SignalRunController extends Controller
             'instrument_count' => $instruments->count(),
         ]);
 
-        $remaining = $limiter->check($user, $subscription->fresh(), $request)->remaining;
+        $remaining = $subscription
+            ? $limiter->check($user, $subscription->fresh(), $request)->remaining
+            : null;
         $remainingLabel = $remaining === null ? 'unlimited' : $remaining;
 
         return redirect()->route('dashboard')

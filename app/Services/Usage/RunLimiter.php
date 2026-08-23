@@ -13,6 +13,10 @@ class RunLimiter
 
     public function check(User $user, ?Subscription $subscription, Request $request): RunCheckResult
     {
+        if ($user->isSuperAdmin()) {
+            return RunCheckResult::allow(null);
+        }
+
         if (! $subscription) {
             return RunCheckResult::deny('No active subscription. Choose a plan to run the AI.');
         }
@@ -41,7 +45,7 @@ class RunLimiter
             'ip_address' => $request->ip(),
         ]);
 
-        if ($subscription) {
+        if ($subscription && ! $user->isSuperAdmin()) {
             $subscription->increment('runs_used_this_period');
         }
     }
