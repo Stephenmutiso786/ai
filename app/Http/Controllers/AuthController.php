@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\SubscriptionPlan;
 use App\Services\Auth\TotpAuthenticator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,7 +23,15 @@ class AuthController extends Controller
 
     public function createRegister(): View
     {
-        return view('auth.register');
+        $plan = request()->filled('plan')
+            ? SubscriptionPlan::where('slug', request('plan'))->where('is_active', true)->first()
+            : null;
+
+        if (! $plan) {
+            return redirect()->route('pricing')->with('run_error', 'Choose a plan before creating your account.');
+        }
+
+        return view('auth.register', compact('plan'));
     }
 
     public function login(Request $request): RedirectResponse
@@ -67,7 +76,10 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'plan' => ['required', 'exists:subscription_plans,slug'],
         ]);
+
+        $plan = SubscriptionPlan::where('slug', $data['plan'])->where('is_active', true)->firstOrFail();
 
         $user = User::create([
             'name' => $data['name'],
@@ -77,10 +89,17 @@ class AuthController extends Controller
             'kyc_status' => 'pending',
         ]);
 
+        $user->subscription()->create([
+            'subscription_plan_id' => $plan->id,
+            'status' => 'active',
+            'current_period_start' => now(),
+            'current_period_end' => now()->addWeek(),
+        ]);
+
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('dashboard')->with('status', 'Account created. Your demo plan is active.');
+        return redirect()->route('dashboard')->with('status', "Account created. Your {$plan->name} plan is active.");
     }
 
     public function logout(Request $request): RedirectResponse

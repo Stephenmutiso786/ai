@@ -14,8 +14,20 @@
             </div>
         @endif
 
+        <div class="mb-6 bg-ink border border-line rounded p-4">
+            <p class="font-mono text-[11px] tracking-[0.15em] text-muted mb-1">SELECTED PLAN</p>
+            <p class="text-lg">{{ $plan->name }}</p>
+            <p class="text-sm text-muted mt-1">
+                {{ $plan->automation_allowed ? 'Automation enabled' : 'Signals only' }}
+                @if(!is_null($plan->price_usd_weekly))
+                    · {{ $plan->price_usd_weekly }} USD / week
+                @endif
+            </p>
+        </div>
+
         <form method="POST" action="{{ route('register.store') }}" class="space-y-4">
             @csrf
+            <input type="hidden" name="plan" value="{{ $plan->slug }}">
             <div>
                 <label class="block text-sm text-muted mb-2">Name</label>
                 <input name="name" type="text" value="{{ old('name') }}" required class="w-full bg-ink border border-line rounded px-4 py-3 outline-none focus:border-brass">
@@ -41,4 +53,3 @@
     </div>
 </div>
 @endsection
-

@@ -47,7 +47,7 @@
                 @if(auth()->check())
                     <a href="{{ route('payments.show', $plan) }}" class="text-center border border-line rounded py-2.5 text-sm hover:border-brass/60 hover:text-brass transition">Choose {{ $plan->name }}</a>
                 @else
-                    <a href="{{ route('login') }}" class="text-center border border-line rounded py-2.5 text-sm hover:border-brass/60 hover:text-brass transition">Sign in to choose {{ $plan->name }}</a>
+                    <a href="{{ route('register', ['plan' => $plan->slug]) }}" class="text-center border border-line rounded py-2.5 text-sm hover:border-brass/60 hover:text-brass transition">Create account with {{ $plan->name }}</a>
                 @endif
             </div>
         @endforeach
