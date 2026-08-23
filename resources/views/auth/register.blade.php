@@ -27,7 +27,16 @@
 
         <form method="POST" action="{{ route('register.store') }}" class="space-y-4">
             @csrf
-            <input type="hidden" name="plan" value="{{ $plan->slug }}">
+            <div>
+                <label class="block text-sm text-muted mb-2">Plan</label>
+                <select name="plan" class="w-full bg-ink border border-line rounded px-4 py-3 outline-none focus:border-brass">
+                    @foreach($plans as $candidate)
+                        <option value="{{ $candidate->slug }}" @selected(old('plan', $plan->slug) === $candidate->slug)>
+                            {{ $candidate->name }}{{ is_null($candidate->price_usd_weekly) ? ' - Contact us' : ' - '.$candidate->price_usd_weekly.' USD/wk' }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
             <div>
                 <label class="block text-sm text-muted mb-2">Name</label>
                 <input name="name" type="text" value="{{ old('name') }}" required class="w-full bg-ink border border-line rounded px-4 py-3 outline-none focus:border-brass">

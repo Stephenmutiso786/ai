@@ -24,15 +24,18 @@ class AuthController extends Controller
 
     public function createRegister(): View
     {
-        $plan = request()->filled('plan')
-            ? SubscriptionPlan::where('slug', request('plan'))->where('is_active', true)->first()
-            : null;
+        $plans = SubscriptionPlan::where('is_active', true)
+            ->orderByRaw('price_usd_weekly is null, price_usd_weekly asc')
+            ->get();
 
-        if (! $plan) {
-            return redirect()->route('pricing')->with('run_error', 'Choose a plan before creating your account.');
-        }
+        $selectedPlan = request()->filled('plan')
+            ? $plans->firstWhere('slug', request('plan'))
+            : $plans->first();
 
-        return view('auth.register', compact('plan'));
+        return view('auth.register', [
+            'plans' => $plans,
+            'plan' => $selectedPlan,
+        ]);
     }
 
     public function login(Request $request): RedirectResponse
