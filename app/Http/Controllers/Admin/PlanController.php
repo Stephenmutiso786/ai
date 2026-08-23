@@ -20,6 +20,7 @@ class PlanController extends Controller
         $data = $request->validate([
             'price_usd_weekly' => 'nullable|integer|min:0',
             'runs_per_week' => 'nullable|integer|min:1|max:100000',
+            'broker_connections_limit' => 'nullable|integer|min:1|max:1000',
             'runs_unlimited' => 'sometimes|boolean',
             'is_active' => 'sometimes|boolean',
         ]);
@@ -27,6 +28,7 @@ class PlanController extends Controller
         $plan->update([
             'price_usd_weekly' => $data['price_usd_weekly'] ?? null,
             'runs_per_week' => $request->boolean('runs_unlimited') ? null : ($data['runs_per_week'] ?? null),
+            'broker_connections_limit' => $data['broker_connections_limit'] ?? null,
             'is_active' => $request->boolean('is_active'),
         ]);
 

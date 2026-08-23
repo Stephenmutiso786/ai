@@ -19,6 +19,11 @@
             </select>
         </div>
 
+        <label class="flex items-center gap-2 text-sm">
+            <input type="checkbox" name="is_super_admin" value="1" {{ $user->isSuperAdmin() ? 'checked' : '' }} class="accent-brass">
+            Super admin access
+        </label>
+
         <div>
             <label class="font-mono text-xs text-muted block mb-1.5">KYC STATUS</label>
             <select name="kyc_status" class="w-full bg-panel border border-line rounded px-3 py-2.5 text-sm focus:border-brass outline-none">

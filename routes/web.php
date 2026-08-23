@@ -34,7 +34,7 @@ Route::get('/payment/{subscription}/success', [PaymentController::class, 'succes
 Route::get('/payment/{subscription}/mpesa-waiting', [PaymentController::class, 'mpesaWaiting'])->middleware('auth')->name('payment.mpesa.waiting');
 Route::get('/payment/{subscription}/status', [PaymentController::class, 'pollStatus'])->middleware('auth')->name('payment.mpesa.status');
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'market.open'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/run', [SignalRunController::class, 'run'])->name('run.trigger');
 

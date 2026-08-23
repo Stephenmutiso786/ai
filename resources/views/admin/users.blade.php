@@ -17,6 +17,7 @@
                     <th class="px-5 py-2 font-normal">Name</th>
                     <th class="px-5 py-2 font-normal">Email</th>
                     <th class="px-5 py-2 font-normal">Role</th>
+                    <th class="px-5 py-2 font-normal">Super Admin</th>
                     <th class="px-5 py-2 font-normal">KYC</th>
                     <th class="px-5 py-2 font-normal">Plan</th>
                     <th class="px-5 py-2 font-normal">Runs used</th>
@@ -29,6 +30,7 @@
                         <td class="px-5 py-3">{{ $user->name }}</td>
                         <td class="px-5 py-3 text-muted">{{ $user->email }}</td>
                         <td class="px-5 py-3 font-mono text-xs">{{ strtoupper($user->role) }}</td>
+                        <td class="px-5 py-3 font-mono text-xs">{{ $user->isSuperAdmin() ? 'YES' : 'NO' }}</td>
                         <td class="px-5 py-3 font-mono text-xs">{{ strtoupper($user->kyc_status) }}</td>
                         <td class="px-5 py-3">{{ $user->subscription?->plan?->name ?? '—' }}</td>
                         <td class="px-5 py-3 font-mono text-xs">{{ $user->subscription?->runs_used_this_period ?? 0 }}</td>

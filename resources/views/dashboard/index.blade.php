@@ -20,6 +20,8 @@
         $used = $subscription?->runs_used_this_period ?? 0;
         $planName = $plan?->name ?? 'No plan';
         $planIsDemo = (bool) ($plan?->is_demo ?? false);
+        $brokerLimit = $plan?->broker_connections_limit;
+        $brokerCount = auth()->user()->brokerAccounts()->count();
     @endphp
     <div class="bg-panel border border-line rounded-lg p-5 mb-8 flex flex-wrap items-center justify-between gap-4">
         <div>
@@ -35,6 +37,14 @@
                     Unlimited runs this week
                 @else
                     {{ $used }} / {{ $limit }} runs used this week
+                @endif
+            </p>
+            <p class="text-xs text-muted font-mono mt-2">
+                Broker connections: {{ $brokerCount }}
+                @if(auth()->user()->isSuperAdmin())
+                    <span class="text-brass">/ unlimited as super admin</span>
+                @elseif($brokerLimit !== null)
+                    <span>/ {{ $brokerLimit }} max on this plan</span>
                 @endif
             </p>
         </div>
@@ -116,7 +126,12 @@
                 @if($brokerAccount)
                     <p class="text-sm mb-1">{{ $brokerAccount->broker }} · {{ $brokerAccount->platform }}</p>
                     <p class="font-mono text-xs text-muted mb-4">{{ $brokerAccount->server }} / ****{{ substr($brokerAccount->account_number, -4) }}</p>
-                    <span class="font-mono text-xs px-2 py-1 rounded border border-line text-muted">{{ strtoupper($brokerAccount->connection_status) }}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="font-mono text-xs px-2 py-1 rounded border border-line text-muted">{{ strtoupper($brokerAccount->connection_status) }}</span>
+                        @if($brokerAccount->isVerified())
+                            <span class="font-mono text-[10px] px-2 py-1 rounded border border-gain/40 text-gain">VERIFIED</span>
+                        @endif
+                    </div>
                 @else
                     <p class="text-sm text-muted mb-4">No broker account connected yet.</p>
                     <a href="{{ route('broker.connect') }}" class="block text-center bg-brass text-ink rounded py-2 text-sm font-medium hover:bg-brass/90 transition">Connect account</a>

@@ -7,19 +7,24 @@
         <div class="flex items-center gap-6 text-sm text-muted">
             <a href="{{ route('dashboard') }}" class="hover:text-slate-100">Dashboard</a>
             <a href="{{ route('broker.connect') }}" class="hover:text-slate-100">Broker</a>
-            <a href="{{ route('custom-package.create') }}" class="hover:text-slate-100">Custom package</a>
-            @auth
-                <a href="{{ route('two-factor.show') }}" class="hover:text-slate-100">Two-factor</a>
-                @if(auth()->user()->isAdmin())
-                    <span class="w-px h-4 bg-line"></span>
-                    <a href="{{ route('admin.control-center') }}" class="hover:text-brass">Control center</a>
+                <a href="{{ route('custom-package.create') }}" class="hover:text-slate-100">Custom package</a>
+                @auth
+                    <a href="{{ route('two-factor.show') }}" class="hover:text-slate-100">Two-factor</a>
+                    @if(auth()->user()->isAdmin())
+                        <span class="w-px h-4 bg-line"></span>
+                        <a href="{{ route('admin.control-center') }}" class="hover:text-brass">Control center</a>
                     <a href="{{ route('admin.ai-lab.index') }}" class="hover:text-brass">AI Lab</a>
                     <a href="{{ route('admin.users.index') }}" class="hover:text-brass">Users</a>
                     <a href="{{ route('admin.plans.index') }}" class="hover:text-brass">Plans</a>
                     <a href="{{ route('admin.custom-requests.index') }}" class="hover:text-brass">Requests</a>
                     <a href="{{ route('admin.settings') }}" class="hover:text-brass">Settings</a>
                 @endif
-                <span class="font-mono text-xs text-slate-300">{{ auth()->user()->name }}</span>
+                <span class="font-mono text-xs text-slate-300 flex items-center gap-2">
+                    {{ auth()->user()->name }}
+                    @if(auth()->user()->isSuperAdmin())
+                        <span class="px-2 py-0.5 rounded border border-brass/40 text-[10px] tracking-wide text-brass">SUPER ADMIN</span>
+                    @endif
+                </span>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
                     <button class="text-xs uppercase tracking-wide text-muted hover:text-loss">Logout</button>

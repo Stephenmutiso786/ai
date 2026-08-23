@@ -8,19 +8,24 @@ class BrokerAccount extends Model
 {
     protected $fillable = [
         'user_id', 'broker', 'platform', 'server', 'account_number',
-        'trading_mode', 'connection_status', 'connected_at',
+        'trading_mode', 'connection_status', 'connected_at', 'verified_at',
     ];
 
     protected $hidden = ['credential_payload_encrypted'];
 
     protected function casts(): array
     {
-        return ['connected_at' => 'datetime'];
+        return ['connected_at' => 'datetime', 'verified_at' => 'datetime'];
     }
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function isVerified(): bool
+    {
+        return $this->connection_status === 'connected' && ! empty($this->verified_at);
     }
 
     /**

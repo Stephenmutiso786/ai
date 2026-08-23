@@ -27,6 +27,7 @@ class UserController extends Controller
     {
         $data = $request->validate([
             'role' => 'required|in:client,admin',
+            'is_super_admin' => 'sometimes|boolean',
             'kyc_status' => 'required|in:pending,verified,rejected',
             'subscription_plan_id' => 'nullable|exists:subscription_plans,id',
             'trading_halted' => 'sometimes|boolean',
@@ -34,6 +35,7 @@ class UserController extends Controller
 
         $user->update([
             'role' => $data['role'],
+            'is_super_admin' => $request->boolean('is_super_admin'),
             'kyc_status' => $data['kyc_status'],
         ]);
 

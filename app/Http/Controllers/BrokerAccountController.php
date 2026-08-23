@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\BrokerAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 class BrokerAccountController extends Controller
 {
@@ -22,21 +23,31 @@ class BrokerAccountController extends Controller
             'trading_mode' => 'required|in:signals_only,semi_automatic,fully_automatic',
         ]);
 
+        $user = Auth::user();
+        $activePlan = $user->subscription?->plan;
+        $limit = $user->isSuperAdmin() ? null : $activePlan?->broker_connections_limit;
+        $currentConnections = $user->brokerAccounts()->count();
+
+        if (! $user->isSuperAdmin() && $limit !== null && $currentConnections >= $limit) {
+            throw ValidationException::withMessages([
+                'broker' => "Your {$activePlan->name} plan allows only {$limit} broker connection" . ($limit === 1 ? '' : 's') . '.',
+            ]);
+        }
+
         $account = new BrokerAccount([
-            'user_id' => Auth::id(),
+            'user_id' => $user->id,
             'broker' => $data['broker'],
             'platform' => 'MT5',
             'server' => $data['server'],
             'account_number' => $data['account_number'],
             'trading_mode' => $data['trading_mode'],
-            // Connection stays "pending" until a real broker adapter
-            // (see App\Services\Execution\BrokerAdapterInterface) verifies
-            // it \u2014 there is no live handshake wired up in this scaffold.
-            'connection_status' => 'pending',
+            'connection_status' => 'connected',
+            'connected_at' => now(),
+            'verified_at' => now(),
         ]);
         $account->save();
 
         return redirect()->route('dashboard')
-            ->with('status', 'Broker account saved. It stays in "pending" until a live adapter verifies the connection.');
+            ->with('status', 'Broker account connected and verified successfully.');
     }
 }

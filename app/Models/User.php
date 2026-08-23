@@ -13,6 +13,7 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name', 'email', 'password', 'role', 'kyc_status',
+        'is_super_admin',
         'two_factor_secret', 'two_factor_recovery_codes', 'two_factor_confirmed_at',
     ];
 
@@ -33,7 +34,12 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->role === 'admin' || $this->isSuperAdmin();
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return (bool) $this->is_super_admin;
     }
 
     public function brokerAccounts()

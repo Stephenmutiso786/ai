@@ -28,6 +28,10 @@
                     <label class="font-mono text-[11px] text-muted block mb-1">RUNS/WEEK</label>
                     <input type="number" name="runs_per_week" value="{{ $plan->runs_per_week }}" placeholder="blank = unlimited" {{ $plan->is_demo ? 'disabled' : '' }} class="w-full bg-ink border border-line rounded px-2.5 py-2 text-sm font-mono focus:border-brass outline-none disabled:opacity-40">
                 </div>
+                <div class="w-40">
+                    <label class="font-mono text-[11px] text-muted block mb-1">BROKER LIMIT</label>
+                    <input type="number" name="broker_connections_limit" value="{{ $plan->broker_connections_limit }}" placeholder="blank = unlimited" class="w-full bg-ink border border-line rounded px-2.5 py-2 text-sm font-mono focus:border-brass outline-none">
+                </div>
                 <label class="text-xs text-muted flex items-center gap-1.5 pb-2.5">
                     <input type="checkbox" name="runs_unlimited" value="1" class="accent-brass"> unlimited
                 </label>
