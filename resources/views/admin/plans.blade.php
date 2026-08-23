@@ -11,6 +11,39 @@
         <div class="mb-6 border border-brass/40 bg-brass/10 text-brass text-sm rounded px-4 py-3">{{ session('status') }}</div>
     @endif
 
+    <form method="POST" action="{{ route('admin.plans.store') }}" class="bg-panel border border-line rounded-lg p-5 mb-6 space-y-4">
+        @csrf
+        <div class="flex flex-wrap gap-4 items-end">
+            <div class="w-36">
+                <label class="font-mono text-[11px] text-muted block mb-1">NAME</label>
+                <input type="text" name="name" placeholder="Starter" class="w-full bg-ink border border-line rounded px-2.5 py-2 text-sm focus:border-brass outline-none">
+            </div>
+            <div class="w-36">
+                <label class="font-mono text-[11px] text-muted block mb-1">SLUG</label>
+                <input type="text" name="slug" placeholder="starter" class="w-full bg-ink border border-line rounded px-2.5 py-2 text-sm font-mono focus:border-brass outline-none">
+            </div>
+            <div class="w-36">
+                <label class="font-mono text-[11px] text-muted block mb-1">PRICE (USD/WK)</label>
+                <input type="number" name="price_usd_weekly" placeholder="optional" class="w-full bg-ink border border-line rounded px-2.5 py-2 text-sm font-mono focus:border-brass outline-none">
+            </div>
+            <div class="w-36">
+                <label class="font-mono text-[11px] text-muted block mb-1">RUNS/WEEK</label>
+                <input type="number" name="runs_per_week" placeholder="blank = unlimited" class="w-full bg-ink border border-line rounded px-2.5 py-2 text-sm font-mono focus:border-brass outline-none">
+            </div>
+            <div class="w-40">
+                <label class="font-mono text-[11px] text-muted block mb-1">BROKER LIMIT</label>
+                <input type="number" name="broker_connections_limit" placeholder="blank = unlimited" class="w-full bg-ink border border-line rounded px-2.5 py-2 text-sm font-mono focus:border-brass outline-none">
+            </div>
+            <label class="text-xs text-muted flex items-center gap-1.5 pb-2.5">
+                <input type="checkbox" name="automation_allowed" value="1" class="accent-brass"> automation
+            </label>
+            <label class="text-xs text-muted flex items-center gap-1.5 pb-2.5">
+                <input type="checkbox" name="is_active" value="1" checked class="accent-brass"> active
+            </label>
+            <button type="submit" class="ml-auto bg-gain text-ink px-4 py-2 rounded text-sm font-medium hover:opacity-90 transition">Add plan</button>
+        </div>
+    </form>
+
     <div class="space-y-4">
         @foreach ($plans as $plan)
             <form method="POST" action="{{ route('admin.plans.update', $plan) }}" class="bg-panel border border-line rounded-lg p-5 flex flex-wrap items-end gap-4">

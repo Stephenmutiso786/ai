@@ -82,6 +82,7 @@ Route::middleware(['auth', 'can:access-admin'])->prefix('admin')->name('admin.')
     Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
 
     Route::get('/plans', [AdminPlanController::class, 'index'])->name('plans.index');
+    Route::post('/plans', [AdminPlanController::class, 'store'])->name('plans.store');
     Route::put('/plans/{plan}', [AdminPlanController::class, 'update'])->name('plans.update');
 
     Route::get('/custom-requests', [AdminCustomPlanRequestController::class, 'index'])->name('custom-requests.index');

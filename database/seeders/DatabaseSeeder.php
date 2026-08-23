@@ -33,12 +33,12 @@ class DatabaseSeeder extends Seeder
             // editable from Admin > Plans rather than guessed permanently.
             ['name' => 'Pro', 'slug' => 'pro', 'price_usd_weekly' => null, 'runs_per_week' => null, 'total_runs_lifetime' => null, 'automation_allowed' => true, 'broker_connections_limit' => 10],
         ] as $plan) {
-            SubscriptionPlan::updateOrCreate(['slug' => $plan['slug']], $plan);
+            SubscriptionPlan::firstOrCreate(['slug' => $plan['slug']], $plan);
         }
 
         // Custom is a hidden template row -- never assigned directly, only
         // used as the vehicle for admin-approved custom-package terms.
-        SubscriptionPlan::updateOrCreate(
+        SubscriptionPlan::firstOrCreate(
             ['slug' => 'custom'],
             ['name' => 'Custom', 'is_custom_template' => true, 'is_active' => false]
         );
