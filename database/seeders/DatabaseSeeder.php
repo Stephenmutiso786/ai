@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Instrument;
+use App\Models\AiModel;
 use App\Models\SubscriptionPlan;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -54,5 +55,15 @@ class DatabaseSeeder extends Seeder
         ] as $instrument) {
             Instrument::firstOrCreate(['symbol' => $instrument['symbol']], $instrument);
         }
+
+        AiModel::firstOrCreate(
+            ['name' => 'STETECH Core'],
+            [
+                'version' => '1.0.0',
+                'framework' => 'fallback',
+                'status' => 'live',
+                'notes' => 'Seeded live model so AI analysis always has a deployment target.',
+            ]
+        );
     }
 }

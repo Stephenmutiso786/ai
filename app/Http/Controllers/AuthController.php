@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Subscription;
 use App\Models\SubscriptionPlan;
 use App\Services\Auth\TotpAuthenticator;
 use Illuminate\Http\RedirectResponse;
@@ -89,7 +90,8 @@ class AuthController extends Controller
             'kyc_status' => 'pending',
         ]);
 
-        $user->subscription()->create([
+        Subscription::create([
+            'user_id' => $user->id,
             'subscription_plan_id' => $plan->id,
             'status' => 'active',
             'current_period_start' => now(),
