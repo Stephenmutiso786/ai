@@ -138,19 +138,23 @@ class AuthController extends Controller
 
         $verified = false;
 
-        if (preg_match('/^\d{6}$/', $data['code'])) {
-            $verified = $totp->verify(Crypt::decryptString($user->two_factor_secret), $data['code']);
-        } else {
-            $codes = json_decode(Crypt::decryptString($user->two_factor_recovery_codes ?? '[]'), true) ?? [];
-            if (in_array($data['code'], $codes, true)) {
-                $verified = true;
-                $remaining = array_values(array_diff($codes, [$data['code']]));
-                $user->update(['two_factor_recovery_codes' => Crypt::encryptString(json_encode($remaining))]);
+        try {
+            if (preg_match('/^\d{6}$/', $data['code'])) {
+                $verified = $totp->verify(Crypt::decryptString($user->two_factor_secret), $data['code']);
+            } else {
+                $codes = json_decode(Crypt::decryptString($user->two_factor_recovery_codes ?? '[]'), true) ?? [];
+                if (in_array($data['code'], $codes, true)) {
+                    $verified = true;
+                    $remaining = array_values(array_diff($codes, [$data['code']]));
+                    $user->update(['two_factor_recovery_codes' => Crypt::encryptString(json_encode($remaining))]);
+                }
             }
+        } catch (\Throwable $e) {
+            return back()->withErrors(['code' => 'Your 2FA setup is not ready yet. Please sign in again and refresh the code.']);
         }
 
         if (! $verified) {
-            return back()->withErrors(['code' => 'That code is invalid or expired.']);
+            return back()->withErrors(['code' => 'That code is invalid, expired, or too old. Please use the current code.']);
         }
 
         Auth::login($user, session('2fa.remember', false));

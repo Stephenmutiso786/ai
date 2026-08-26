@@ -40,7 +40,9 @@ class TotpAuthenticator
 
         $currentStep = (int) floor(time() / $this->period);
 
-        for ($offset = -1; $offset <= 1; $offset++) {
+        // Allow a wider time window so users do not get punished by small
+        // clock skew or a few extra seconds spent typing the code.
+        for ($offset = -2; $offset <= 2; $offset++) {
             if (hash_equals($this->codeAt($secret, $currentStep + $offset), $code)) {
                 return true;
             }
@@ -98,4 +100,3 @@ class TotpAuthenticator
         return $bytes;
     }
 }
-
