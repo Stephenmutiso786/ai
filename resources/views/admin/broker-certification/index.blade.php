@@ -18,10 +18,16 @@
                             <p class="font-medium">{{ $account->broker }} · {{ $account->platform }}</p>
                             <p class="text-xs text-muted font-mono">#{{ $account->account_number }} · {{ $account->connection_status }}</p>
                         </div>
-                        <form method="POST" action="{{ route('admin.broker-certification.run', $account) }}">
-                            @csrf
-                            <button class="bg-brass text-ink px-3 py-2 rounded text-xs font-medium">Run certification</button>
-                        </form>
+                        <div class="flex gap-2">
+                            <form method="POST" action="{{ route('broker.test', $account) }}">
+                                @csrf
+                                <button class="border border-line px-3 py-2 rounded text-xs font-medium">Test bridge</button>
+                            </form>
+                            <form method="POST" action="{{ route('admin.broker-certification.run', $account) }}">
+                                @csrf
+                                <button class="bg-brass text-ink px-3 py-2 rounded text-xs font-medium">Run certification</button>
+                            </form>
+                        </div>
                     </div>
                 @empty
                     <p class="text-sm text-muted">No broker accounts found.</p>
@@ -65,4 +71,3 @@
     </section>
 </div>
 @endsection
-

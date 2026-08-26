@@ -42,8 +42,8 @@ return [
     ],
 
     'Broker / execution' => [
-        'mt5_bridge_url' => ['label' => 'MT5 bridge URL'],
-        'mt5_bridge_token' => ['label' => 'MT5 bridge auth token'],
+        'mt5_bridge_url' => ['label' => 'MT5 bridge URL', 'help' => 'Private HTTPS URL of the Windows host running the MT5 connector'],
+        'mt5_bridge_token' => ['label' => 'MT5 bridge auth token', 'secret' => true, 'help' => 'Bearer token shared only with the broker connector'],
     ],
 
     'Payments' => [

@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Crypt;
+use RuntimeException;
 
 class BrokerAccount extends Model
 {
@@ -43,16 +45,71 @@ class BrokerAccount extends Model
      */
     public function credentialPayload(): array
     {
-        if (! $this->credential_payload_encrypted) return [];
-        return json_decode(\Illuminate\Support\Facades\Crypt::decryptString($this->credential_payload_encrypted), true) ?: [];
+        if (! $this->credential_payload_encrypted) {
+            return [];
+        }
+
+        $raw = $this->credential_payload_encrypted;
+        if (str_starts_with($raw, 'v1:')) {
+            $raw = substr($raw, 3);
+            $decrypted = $this->decryptPayload($raw);
+
+            return json_decode($decrypted, true) ?: [];
+        }
+
+        try {
+            return json_decode(Crypt::decryptString($raw), true) ?: [];
+        } catch (\Throwable) {
+            return [];
+        }
     }
 
     public function setCredentialPayload(array $payload): void
     {
-        $key = config('services.broker_credential_cipher_key');
+        $this->credential_payload_encrypted = 'v1:'.$this->encryptPayload(json_encode($payload));
+    }
 
-        $this->credential_payload_encrypted = \Illuminate\Support\Facades\Crypt::encryptString(
-            json_encode($payload)
-        );
+    private function encryptionKey(): string
+    {
+        $key = (string) config('services.broker_credential_cipher_key');
+
+        if ($key === '') {
+            throw new RuntimeException('BROKER_CREDENTIAL_CIPHER_KEY is not configured.');
+        }
+
+        return hash('sha256', $key, true);
+    }
+
+    private function encryptPayload(string $payload): string
+    {
+        $cipher = 'AES-256-CBC';
+        $iv = random_bytes(openssl_cipher_iv_length($cipher));
+        $ciphertext = openssl_encrypt($payload, $cipher, $this->encryptionKey(), OPENSSL_RAW_DATA, $iv);
+
+        if ($ciphertext === false) {
+            throw new RuntimeException('Unable to encrypt broker credential payload.');
+        }
+
+        return base64_encode($iv.$ciphertext);
+    }
+
+    private function decryptPayload(string $payload): string
+    {
+        $decoded = base64_decode($payload, true);
+        if ($decoded === false) {
+            throw new RuntimeException('Broker credential payload is invalid.');
+        }
+
+        $cipher = 'AES-256-CBC';
+        $ivLength = openssl_cipher_iv_length($cipher);
+        $iv = substr($decoded, 0, $ivLength);
+        $ciphertext = substr($decoded, $ivLength);
+        $plaintext = openssl_decrypt($ciphertext, $cipher, $this->encryptionKey(), OPENSSL_RAW_DATA, $iv);
+
+        if ($plaintext === false) {
+            throw new RuntimeException('Unable to decrypt broker credential payload.');
+        }
+
+        return $plaintext;
     }
 }

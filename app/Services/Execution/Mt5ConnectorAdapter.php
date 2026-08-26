@@ -12,7 +12,24 @@ use RuntimeException;
  */
 class Mt5ConnectorAdapter implements BrokerAdapterInterface
 {
-    private function payload(BrokerAccount $a): array { return $a->credentialPayload(); }
+    private function payload(BrokerAccount $a): array
+    {
+        $payload = $a->credentialPayload();
+
+        if (! empty($payload['connector_url']) && ! empty($payload['connector_token'])) {
+            return $payload;
+        }
+
+        $url = setting('mt5_bridge_url');
+        $token = setting('mt5_bridge_token');
+
+        if ($url && $token) {
+            $payload['connector_url'] = $url;
+            $payload['connector_token'] = $token;
+        }
+
+        return $payload;
+    }
     private function http(BrokerAccount $a)
     {
         $p=$this->payload($a);

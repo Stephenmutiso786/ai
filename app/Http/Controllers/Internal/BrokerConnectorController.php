@@ -19,10 +19,22 @@ class BrokerConnectorController extends Controller
     'margin_available'=>data_get($snapshot, 'margin_available'),
     'currency'=>data_get($snapshot, 'currency'),
   ]);
-  return response()->json(['connected'=>$ok]);
+  if ($r->expectsJson()) {
+   return response()->json(['connected'=>$ok, 'snapshot'=>$snapshot]);
+  }
+
+  return back()->with('status', $ok
+    ? 'MT5 bridge connected successfully and the account snapshot was refreshed.'
+    : 'MT5 bridge connection failed. Check the Windows connector service, token, and terminal session.');
  }
  public function snapshot(Request $r, BrokerAccount $account, BrokerAdapterRegistry $registry) {
   abort_unless($r->user()->can('access-admin') || $r->user()->id === $account->user_id,403);
-  $snapshot=$registry->for($account)->accountSnapshot($account); $account->update(['last_synced_at'=>now(),'connection_status'=>'connected','verified_at'=>now(),'balance'=>data_get($snapshot,'balance'),'equity'=>data_get($snapshot,'equity'),'margin_available'=>data_get($snapshot,'margin_available'),'currency'=>data_get($snapshot,'currency')]); return response()->json($snapshot);
+  $snapshot=$registry->for($account)->accountSnapshot($account);
+  $account->update(['last_synced_at'=>now(),'connection_status'=>'connected','verified_at'=>now(),'balance'=>data_get($snapshot,'balance'),'equity'=>data_get($snapshot,'equity'),'margin_available'=>data_get($snapshot,'margin_available'),'currency'=>data_get($snapshot,'currency')]);
+  if ($r->expectsJson()) {
+   return response()->json($snapshot);
+  }
+
+  return back()->with('status', 'Broker snapshot refreshed from MT5.');
  }
 }

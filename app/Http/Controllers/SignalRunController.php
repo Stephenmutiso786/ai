@@ -22,12 +22,23 @@ class SignalRunController extends Controller
         }
 
         $instruments = Instrument::where('is_active', true)->get();
-        foreach ($instruments as $instrument) {
-            $signalEngine->generateFor($instrument);
+        if ($instruments->isEmpty()) {
+            return redirect()->route('dashboard')->with('run_error', 'No active instruments are configured for analysis.');
+        }
+
+        $generated = 0;
+        try {
+            foreach ($instruments as $instrument) {
+                $signalEngine->generateFor($instrument);
+                $generated++;
+            }
+        } catch (\Throwable $e) {
+            return redirect()->route('dashboard')->with('run_error', 'AI analysis failed: '.$e->getMessage());
         }
 
         $limiter->record($user, $subscription, $request, [
             'instrument_count' => $instruments->count(),
+            'signals_generated' => $generated,
         ]);
 
         $remaining = $subscription
@@ -36,6 +47,6 @@ class SignalRunController extends Controller
         $remainingLabel = $remaining === null ? 'unlimited' : $remaining;
 
         return redirect()->route('dashboard')
-            ->with('status', "AI run complete across {$instruments->count()} instruments. Runs remaining this period: {$remainingLabel}.");
+            ->with('status', "AI run complete across {$generated} instruments. Runs remaining this period: {$remainingLabel}.");
     }
 }
