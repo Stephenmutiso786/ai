@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 use App\Models\AiSignal;
 use App\Models\Instrument;
 use App\Models\Trade;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
@@ -208,6 +209,42 @@ class TradingWorkspaceController extends Controller
             'regime' => $regime,
             'signal_bias' => $ma20 !== null && $ma50 !== null ? ($ma20 > $ma50 ? 'bullish' : 'bearish') : 'neutral',
             'candle_count' => $candles->count(),
+        ]);
+    }
+
+    public function health(Request $r)
+    {
+        $symbol = strtoupper($r->string('symbol')->toString() ?: (Instrument::where('is_active', true)->value('symbol') ?? ''));
+        $timeframe = strtoupper($r->string('timeframe')->toString() ?: 'H1');
+        $lastCandle = DB::table('market_data_candles')
+            ->where('symbol', $symbol)
+            ->where('timeframe', $timeframe)
+            ->orderByDesc('time')
+            ->first();
+        $lastSignal = AiSignal::with('instrument')
+            ->when($symbol, fn ($q) => $q->whereHas('instrument', fn ($iq) => $iq->where('symbol', $symbol)))
+            ->latest('generated_at')
+            ->first();
+
+        return response()->json([
+            'provider' => setting('ai_market_data_provider') ?: 'oanda',
+            'market_sync' => [
+                'symbol' => $symbol,
+                'timeframe' => $timeframe,
+                'last_candle_at' => $lastCandle?->time,
+                'rows_known' => (int) DB::table('market_data_candles')->where('symbol', $symbol)->where('timeframe', $timeframe)->count(),
+            ],
+            'signal' => $lastSignal ? [
+                'symbol' => $lastSignal->instrument?->symbol,
+                'direction' => $lastSignal->direction,
+                'confidence' => $lastSignal->confidence,
+                'generated_at' => optional($lastSignal->generated_at)->toIso8601String(),
+            ] : null,
+            'live_feed' => [
+                'twelve_data' => (bool) (setting('twelve_data_api_key') ?: setting('market_data_api_key')),
+                'oanda' => (bool) (setting('oanda_api_token') && setting('oanda_account_id')),
+                'ai_service' => (bool) (setting('ai_service_url') && setting('ai_service_token')),
+            ],
         ]);
     }
 }

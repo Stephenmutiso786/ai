@@ -8,13 +8,20 @@
             <h1 class="font-display text-3xl">Trading Workspace</h1>
             <p class="text-sm text-muted mt-2">Twelve Data-backed candles with trained AI overlays, broker state, and live trade monitoring.</p>
         </div>
-        <div class="flex items-center gap-3">
+        <div class="flex flex-wrap items-center gap-3">
             <label class="text-xs font-mono text-muted">SYMBOL</label>
             <select id="symbol" class="bg-panel border border-line rounded px-3 py-2 text-sm">
                 @foreach($instruments as $i)
                     <option value="{{ $i->symbol }}" @selected($i->symbol===$symbol)>{{ $i->symbol }}</option>
                 @endforeach
             </select>
+            <div class="flex items-center gap-2">
+                <button data-tf="M15" class="tf-btn border border-line rounded px-3 py-2 text-xs">M15</button>
+                <button data-tf="H1" class="tf-btn border border-brass/50 text-brass rounded px-3 py-2 text-xs">H1</button>
+                <button data-tf="H4" class="tf-btn border border-line rounded px-3 py-2 text-xs">H4</button>
+                <button data-tf="D1" class="tf-btn border border-line rounded px-3 py-2 text-xs">D1</button>
+            </div>
+            <div id="health-chip" class="text-xs font-mono px-3 py-2 rounded border border-line text-muted">Checking feed…</div>
         </div>
     </div>
 
@@ -67,6 +74,7 @@
 <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
 <script>
 let chart, candleSeries, signalEntrySeries, signalStopSeries, signalTakeSeries;
+let currentTimeframe = 'H1';
 
 function currentSymbol() {
     return document.getElementById('symbol').value;
@@ -103,12 +111,12 @@ function ensureChart() {
 
 async function loadCandles() {
     const symbol = currentSymbol();
-    const r = await fetch(`/api/workspace/candles?symbol=${encodeURIComponent(symbol)}&timeframe=h1&limit=800`);
+    const r = await fetch(`/api/workspace/candles?symbol=${encodeURIComponent(symbol)}&timeframe=${encodeURIComponent(currentTimeframe)}&limit=800`);
     const d = await r.json();
     ensureChart();
     candleSeries.setData(d.candles);
     chart.timeScale().fitContent();
-    document.getElementById('chart-meta').textContent = `${symbol} · ${d.candles.length} candles · refreshed ${new Date().toLocaleTimeString()}`;
+    document.getElementById('chart-meta').textContent = `${symbol} · ${currentTimeframe} · ${d.candles.length} candles · refreshed ${new Date().toLocaleTimeString()}`;
 }
 
 async function loadSignal() {
@@ -140,6 +148,13 @@ async function loadSignal() {
         signalEntrySeries.setData([{ time: lastTime, value: Number(sig.entry) }]);
         signalStopSeries.setData([{ time: lastTime, value: Number(sig.stop_loss) }]);
         signalTakeSeries.setData([{ time: lastTime, value: Number(sig.take_profit) }]);
+        candleSeries.setMarkers([
+            { time: lastTime, position: 'belowBar', color: '#f59e0b', shape: 'arrowUp', text: `Entry ${sig.direction}` },
+            { time: lastTime, position: 'aboveBar', color: '#ef4444', shape: 'arrowDown', text: 'SL' },
+            { time: lastTime, position: 'aboveBar', color: '#22c55e', shape: 'arrowDown', text: 'TP' },
+        ]);
+    } else {
+        candleSeries.setMarkers([]);
     }
 }
 
@@ -163,6 +178,16 @@ async function loadAnalysis() {
         </div>
         <div class="mt-3 text-xs text-muted">Regime: ${d.regime} · Candles: ${d.candle_count}</div>
     `;
+}
+
+async function loadHealth() {
+    const symbol = currentSymbol();
+    const r = await fetch(`/api/workspace/health?symbol=${encodeURIComponent(symbol)}&timeframe=${encodeURIComponent(currentTimeframe)}`);
+    const d = await r.json();
+    const chip = document.getElementById('health-chip');
+    const candleAt = d.market_sync?.last_candle_at ? new Date(d.market_sync.last_candle_at).toLocaleString() : 'no candles';
+    const signalAt = d.signal?.generated_at ? new Date(d.signal.generated_at).toLocaleString() : 'no signal';
+    chip.textContent = `${d.provider} · candles ${candleAt} · signal ${signalAt}`;
 }
 
 async function loadBroker() {
@@ -192,6 +217,7 @@ async function refreshAll() {
         await loadCandles();
         await loadSignal();
         await loadAnalysis();
+        await loadHealth();
         await loadBroker();
         await loadPerformance();
     } catch (e) {
@@ -200,6 +226,14 @@ async function refreshAll() {
 }
 
 document.getElementById('symbol').addEventListener('change', refreshAll);
+document.querySelectorAll('.tf-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        currentTimeframe = btn.dataset.tf;
+        document.querySelectorAll('.tf-btn').forEach(x => x.classList.remove('border-brass/50', 'text-brass'));
+        btn.classList.add('border-brass/50', 'text-brass');
+        refreshAll();
+    });
+});
 refreshAll();
 setInterval(refreshAll, 15000);
 </script>
