@@ -45,6 +45,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/workspace/candles', [TradingWorkspaceController::class, 'candles'])->name('workspace.candles');
     Route::get('/api/workspace/analysis', [TradingWorkspaceController::class, 'analysis'])->name('workspace.analysis');
     Route::get('/api/workspace/health', [TradingWorkspaceController::class, 'health'])->name('workspace.health');
+    Route::get('/api/workspace/symbol-map', [TradingWorkspaceController::class, 'symbolMap'])->name('workspace.symbol-map');
     Route::get('/api/workspace/latest-signal', [TradingWorkspaceController::class, 'latestSignal'])->name('workspace.latest-signal');
     Route::get('/api/workspace/positions', [TradingWorkspaceController::class, 'positions'])->name('workspace.positions');
     Route::get('/api/workspace/performance', [TradingWorkspaceController::class, 'performance'])->name('workspace.performance');

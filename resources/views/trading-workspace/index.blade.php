@@ -25,7 +25,25 @@
         </div>
     </div>
 
-    <div class="grid lg:grid-cols-[1.7fr_0.9fr] gap-6">
+    <div class="grid lg:grid-cols-[1.1fr_1.7fr_0.9fr] gap-6">
+        <div class="space-y-4">
+            <div class="bg-panel border border-line rounded-lg p-5">
+                <p class="font-mono text-[11px] tracking-[0.15em] text-muted mb-3">WATCHLIST</p>
+                <div class="divide-y divide-line">
+                    @foreach($instruments->take(12) as $item)
+                        <button type="button" data-symbol="{{ $item->symbol }}" class="watch-item w-full flex items-center justify-between py-2 text-left text-sm hover:text-brass">
+                            <span class="font-mono">{{ $item->symbol }}</span>
+                            <span class="text-xs text-muted">Open</span>
+                        </button>
+                    @endforeach
+                </div>
+            </div>
+            <div class="bg-panel border border-line rounded-lg p-5">
+                <p class="font-mono text-[11px] tracking-[0.15em] text-muted mb-3">WIDGET STATUS</p>
+                <div id="widget-status" class="text-sm text-muted">Loading TradingView widget…</div>
+            </div>
+        </div>
+
         <div class="bg-panel border border-line rounded-lg overflow-hidden">
             <div class="flex items-center justify-between px-5 py-3 border-b border-line">
                 <div>
@@ -75,6 +93,8 @@
 <script>
 let tvWidget = null;
 let currentTimeframe = '60';
+const tvExchange = @json($tvExchange);
+const tvPrefix = @json($tvPrefix);
 
 function currentSymbol() {
     return document.getElementById('symbol').value;
@@ -85,7 +105,7 @@ function intervalMap(tf) {
 }
 
 function widgetSymbol(symbol) {
-    return symbol.includes(':') ? symbol : `OANDA:${symbol}`;
+    return symbol.includes(':') ? symbol : `${tvExchange}:${tvPrefix}${symbol}`;
 }
 
 function ensureWidget() {
@@ -93,31 +113,37 @@ function ensureWidget() {
     const container = document.getElementById('tv-chart');
     container.innerHTML = '';
 
-    tvWidget = new TradingView.widget({
-        autosize: true,
-        symbol: widgetSymbol(symbol),
-        interval: intervalMap(currentTimeframe),
-        timezone: 'Africa/Nairobi',
-        theme: 'dark',
-        style: '1',
-        locale: 'en',
-        enable_publishing: false,
-        hide_top_toolbar: false,
-        hide_legend: false,
-        save_image: false,
-        allow_symbol_change: false,
-        container_id: 'tv-chart',
-        studies: ['MASimple@tv-basicstudies', 'RSI@tv-basicstudies', 'ATR@tv-basicstudies'],
-        disabled_features: ['use_localstorage_for_settings'],
-        enabled_features: ['study_templates'],
-        details: true,
-        withdateranges: true,
-        hotlist: false,
-        calendar: false,
-        support_host: 'https://www.tradingview.com',
-    });
-
-    document.getElementById('chart-meta').textContent = `${symbol} · ${currentTimeframe}`;
+    try {
+        tvWidget = new TradingView.widget({
+            autosize: true,
+            symbol: widgetSymbol(symbol),
+            interval: intervalMap(currentTimeframe),
+            timezone: 'Africa/Nairobi',
+            theme: 'dark',
+            style: '1',
+            locale: 'en',
+            enable_publishing: false,
+            hide_top_toolbar: false,
+            hide_legend: false,
+            save_image: false,
+            allow_symbol_change: false,
+            container_id: 'tv-chart',
+            studies: ['MASimple@tv-basicstudies', 'RSI@tv-basicstudies', 'ATR@tv-basicstudies'],
+            disabled_features: ['use_localstorage_for_settings'],
+            enabled_features: ['study_templates'],
+            details: true,
+            withdateranges: true,
+            hotlist: false,
+            calendar: false,
+            support_host: 'https://www.tradingview.com',
+        });
+        document.getElementById('widget-status').textContent = 'TradingView widget loaded successfully.';
+        document.getElementById('chart-meta').textContent = `${symbol} · ${currentTimeframe}`;
+    } catch (e) {
+        document.getElementById('widget-status').textContent = 'TradingView widget failed to load.';
+        document.getElementById('chart-meta').textContent = `${symbol} · ${currentTimeframe} · widget unavailable`;
+        console.error(e);
+    }
 }
 
 async function loadSignal() {
@@ -214,6 +240,12 @@ async function refreshAll() {
 }
 
 document.getElementById('symbol').addEventListener('change', refreshAll);
+document.querySelectorAll('.watch-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.getElementById('symbol').value = btn.dataset.symbol;
+        refreshAll();
+    });
+});
 document.querySelectorAll('.tf-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         currentTimeframe = btn.dataset.tf;

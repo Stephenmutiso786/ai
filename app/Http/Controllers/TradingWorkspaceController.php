@@ -15,7 +15,12 @@ class TradingWorkspaceController extends Controller
         $instruments = Instrument::orderBy('symbol')->get();
         $symbol = $r->string('symbol')->toString() ?: optional($instruments->first())->symbol;
 
-        return view('trading-workspace.index', compact('instruments', 'symbol'));
+        return view('trading-workspace.index', [
+            'instruments' => $instruments,
+            'symbol' => $symbol,
+            'tvExchange' => setting('tradingview_exchange') ?: 'OANDA',
+            'tvPrefix' => setting('tradingview_symbol_prefix') ?: '',
+        ]);
     }
 
     public function candles(Request $r)
@@ -228,6 +233,10 @@ class TradingWorkspaceController extends Controller
 
         return response()->json([
             'provider' => setting('ai_market_data_provider') ?: 'oanda',
+            'tradingview' => [
+                'exchange' => setting('tradingview_exchange') ?: 'OANDA',
+                'prefix' => setting('tradingview_symbol_prefix') ?: '',
+            ],
             'market_sync' => [
                 'symbol' => $symbol,
                 'timeframe' => $timeframe,
@@ -245,6 +254,20 @@ class TradingWorkspaceController extends Controller
                 'oanda' => (bool) (setting('oanda_api_token') && setting('oanda_account_id')),
                 'ai_service' => (bool) (setting('ai_service_url') && setting('ai_service_token')),
             ],
+        ]);
+    }
+
+    public function symbolMap(Request $r)
+    {
+        $symbol = strtoupper($r->validate(['symbol' => 'required|string|max:32'])['symbol']);
+        $exchange = setting('tradingview_exchange') ?: 'OANDA';
+        $prefix = setting('tradingview_symbol_prefix') ?: '';
+
+        return response()->json([
+            'symbol' => $symbol,
+            'tradingview_symbol' => $prefix ? "{$exchange}:{$prefix}{$symbol}" : "{$exchange}:{$symbol}",
+            'exchange' => $exchange,
+            'prefix' => $prefix,
         ]);
     }
 }
