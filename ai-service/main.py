@@ -65,11 +65,12 @@ def backtest(payload: Backtest):
 async def live_signal(payload: LiveSignalRequest):
     bundle = load_bundle(payload.model_id)
     try:
+        plan = payload.provider_config.get('plan', {})
         provider = payload.provider.lower()
         if provider == 'oanda': rows = await OandaProvider(payload.provider_config).candles(payload.symbol, payload.timeframe, payload.count)
         elif provider in ('twelve','twelvedata','twelve_data'): rows = await TwelveDataProvider(payload.provider_config).candles(payload.symbol, payload.timeframe, payload.count)
         else: raise HTTPException(422, 'Unsupported market-data provider')
-        return build_signal(bundle, rows, payload.symbol, payload.timeframe)
+        return build_signal(bundle, rows, payload.symbol, payload.timeframe, plan=plan)
     except HTTPException: raise
     except Exception as e: raise HTTPException(502, str(e))
 

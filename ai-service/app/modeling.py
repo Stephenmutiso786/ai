@@ -66,9 +66,11 @@ def train_classifier(df, config=None):
             order = np.argsort(p)
             ranked = y[order]
             cum_pos = np.cumsum(ranked)
-            total_pos = cum_pos[-1]
-            total_neg = len(y) - total_pos
+            total_pos = float(cum_pos[-1])
+            total_neg = float(len(y) - total_pos)
             if total_pos > 0 and total_neg > 0:
-                auc = (cum_pos[ranked == 0].sum() / (total_pos * total_neg)) if total_pos and total_neg else 0.5
+                rank = np.arange(1, len(y) + 1, dtype=float)
+                sum_ranks_pos = float(rank[order][y == 1].sum())
+                auc = (sum_ranks_pos - total_pos * (total_pos + 1.0) / 2.0) / (total_pos * total_neg)
                 metrics['roc_auc'] = float(max(0.0, min(1.0, auc)))
     return model, metrics

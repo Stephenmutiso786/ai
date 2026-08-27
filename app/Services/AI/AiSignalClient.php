@@ -29,6 +29,15 @@ class AiSignalClient
                 throw new \RuntimeException('Required market-data credential is missing from Super Admin Settings: '.$key);
             }
         }
+        $plan = auth()->user()?->subscription?->plan;
+        $providerConfig['plan'] = [
+            'trading_mode' => $plan?->recommendedTradingMode() ?? 'signals_only',
+            'min_confidence' => $plan?->automation_allowed ? 66 : 60,
+            'entry_threshold' => $plan?->automation_allowed ? 0.57 : 0.55,
+            'exit_threshold' => $plan?->automation_allowed ? 0.43 : 0.45,
+            'plan_name' => $plan?->name,
+            'plan_slug' => $plan?->slug,
+        ];
         $response = Http::timeout(20)->acceptJson()->withToken((string) $token)->post(rtrim($url, '/').'/signals/live', [
             'model_id' => $model->id,
             'symbol' => $symbol,

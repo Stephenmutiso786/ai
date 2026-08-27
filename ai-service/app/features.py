@@ -27,5 +27,9 @@ def make_features(df: pd.DataFrame) -> pd.DataFrame:
     x['vol_ma_20'] = x['volume'].rolling(20).mean() if 'volume' in x.columns else np.nan
     x['vol_ratio'] = x['volume'] / x['vol_ma_20'] if 'volume' in x.columns else np.nan
     x['compression'] = x['range_pct'] / x['atr_pct'].replace(0, np.nan)
-    x['target'] = (x['close'].shift(-3) > x['close']).astype(int)
+    future_3 = x['close'].shift(-3)
+    edge_threshold = (x['atr_14'] * 0.35).fillna(0)
+    x['future_return_3'] = (future_3 - x['close']) / x['close']
+    x['edge_strength_3'] = (future_3 - x['close']) / x['atr_14'].replace(0, np.nan)
+    x['target'] = (future_3 > (x['close'] + edge_threshold)).astype(int)
     return x.dropna().reset_index(drop=True)

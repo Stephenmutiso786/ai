@@ -4,7 +4,7 @@ import pandas as pd
 from .features import make_features
 from .modeling import FEATURE_COLUMNS
 
-def build_signal(model_bundle: dict, rows: list[dict[str, Any]], symbol: str, timeframe: str) -> dict[str, Any]:
+def build_signal(model_bundle: dict, rows: list[dict[str, Any]], symbol: str, timeframe: str, plan: dict[str, Any] | None = None) -> dict[str, Any]:
     raw = pd.DataFrame(rows)
     frame = make_features(raw).dropna().reset_index(drop=True)
     if frame.empty:
@@ -12,7 +12,18 @@ def build_signal(model_bundle: dict, rows: list[dict[str, Any]], symbol: str, ti
     latest = frame.iloc[-1]
     x = frame[FEATURE_COLUMNS].tail(1)
     p = float(model_bundle['model'].predict_proba(x)[0, 1])
-    direction = 'buy' if p >= 0.55 else ('sell' if p <= 0.45 else 'wait')
+    plan = plan or {}
+    trading_mode = str(plan.get('trading_mode') or 'signals_only')
+    min_confidence = float(plan.get('min_confidence', 60.0))
+    entry_threshold = float(plan.get('entry_threshold', 0.55))
+    exit_threshold = float(plan.get('exit_threshold', 0.45))
+    if trading_mode == 'fully_automatic':
+        entry_threshold = max(entry_threshold, 0.60)
+        min_confidence = max(min_confidence, 72.0)
+    elif trading_mode == 'semi_automatic':
+        entry_threshold = max(entry_threshold, 0.57)
+        min_confidence = max(min_confidence, 66.0)
+    direction = 'buy' if p >= entry_threshold else ('sell' if p <= exit_threshold else 'wait')
     confidence = round(abs(p - 0.5) * 200, 2)
     entry = float(latest['close'])
     atr = float(latest.get('atr_14', 0.0))
@@ -25,6 +36,10 @@ def build_signal(model_bundle: dict, rows: list[dict[str, Any]], symbol: str, ti
     trend = float(latest.get('trend', 0.0))
     trend_50 = float(latest.get('trend_50', 0.0))
     regime = 'trending' if abs(trend) + abs(trend_50) > max(abs(entry) * 0.00025, 1e-8) else 'ranging'
+    if confidence < min_confidence:
+        direction = 'wait'
+        stop_loss = None
+        take_profit = None
     return {
         'symbol': symbol,
         'timeframe': timeframe,
@@ -36,5 +51,5 @@ def build_signal(model_bundle: dict, rows: list[dict[str, Any]], symbol: str, ti
         'take_profit': take_profit,
         'risk_reward': 2.0 if direction != 'wait' else None,
         'market_regime': regime,
-        'reasoning': f'Model probability_up={p:.4f}; ATR-based risk levels; trend={trend:.6f}; regime={regime}.',
+        'reasoning': f"Model probability_up={p:.4f}; plan_mode={trading_mode}; ATR-based risk levels; trend={trend:.6f}; regime={regime}.",
     }
