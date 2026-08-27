@@ -29,15 +29,25 @@ class ControlCenterController extends Controller
         $recentTrades = Trade::with(['user', 'instrument'])->latest()->limit(25)->get();
         $latestSignal = AiSignal::with('instrument')->latest('generated_at')->first();
         $latestTrainingRun = AiTrainingRun::with(['model', 'dataset'])->latest('created_at')->first();
+        $latestModel = $latestTrainingRun?->model ?? \App\Models\AiModel::latest('updated_at')->first();
+        $latestSignalAge = $latestSignal?->generated_at ? $latestSignal->generated_at->diffForHumans() : null;
         $readiness = [
             'live_trading_enabled' => filter_var(config('live_trading.enabled', false), FILTER_VALIDATE_BOOL) ? 'ok' : 'blocked',
             'broker_execution_mode' => config('services.broker_execution_mode', 'paper') === 'live' ? 'ok' : 'blocked',
-            'trained_model' => $latestTrainingRun?->model?->artifact_uri ? 'ok' : 'blocked',
+            'trained_model' => $latestModel?->artifact_uri ? 'ok' : 'blocked',
             'fresh_signal' => $latestSignal ? 'ok' : 'blocked',
             'market_provider' => Setting::getValue('ai_market_data_provider') ? 'ok' : 'blocked',
         ];
 
-        return view('admin.control-center', compact('stats', 'recentTrades', 'readiness', 'latestSignal', 'latestTrainingRun'));
+        $readinessDetails = [
+            'live_trading_enabled' => filter_var(config('live_trading.enabled', false), FILTER_VALIDATE_BOOL) ? 'LIVE_TRADING_ENABLED=true' : 'LIVE_TRADING_ENABLED=false',
+            'broker_execution_mode' => 'BROKER_EXECUTION_MODE='.config('services.broker_execution_mode', 'paper'),
+            'trained_model' => $latestModel?->artifact_uri ? 'Artifact: '.$latestModel->artifact_uri : 'No artifact_uri on latest model',
+            'fresh_signal' => $latestSignalAge ? 'Latest signal '.$latestSignalAge : 'No live signal yet',
+            'market_provider' => 'Provider: '.(Setting::getValue('ai_market_data_provider') ?: 'not set'),
+        ];
+
+        return view('admin.control-center', compact('stats', 'recentTrades', 'readiness', 'readinessDetails', 'latestSignal', 'latestTrainingRun', 'latestModel'));
     }
 
     /**

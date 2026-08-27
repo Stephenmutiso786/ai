@@ -33,9 +33,17 @@
                 </div>
             @endforeach
         </div>
+        <div class="grid md:grid-cols-5 gap-3 mt-4 text-[11px] text-muted font-mono">
+            @foreach($readinessDetails as $key => $detail)
+                <div class="border border-line rounded-lg p-3 bg-ink/40">
+                    <div class="tracking-wide mb-1">{{ strtoupper(str_replace('_', ' ', $key)) }}</div>
+                    <div>{{ $detail }}</div>
+                </div>
+            @endforeach
+        </div>
         <div class="grid md:grid-cols-2 gap-3 mt-4 text-xs text-muted">
-            <div class="bg-ink/40 rounded p-3 border border-line">Latest signal: {{ $latestSignal?->direction ? strtoupper($latestSignal->direction).' '.$latestSignal->instrument?->symbol : 'none' }}</div>
-            <div class="bg-ink/40 rounded p-3 border border-line">Latest training run: {{ $latestTrainingRun?->status ?? 'none' }}{{ $latestTrainingRun?->model?->artifact_uri ? ' · artifact ready' : '' }}</div>
+            <div class="bg-ink/40 rounded p-3 border border-line">Latest signal: {{ $latestSignal?->direction ? strtoupper($latestSignal->direction).' '.$latestSignal->instrument?->symbol : 'none' }}{{ $latestSignal?->generated_at ? ' · '.$latestSignal->generated_at->diffForHumans() : '' }}</div>
+            <div class="bg-ink/40 rounded p-3 border border-line">Latest training run: {{ $latestTrainingRun?->status ?? 'none' }}{{ $latestModel?->artifact_uri ? ' · artifact ready' : ' · no artifact' }}</div>
         </div>
     </div>
 
