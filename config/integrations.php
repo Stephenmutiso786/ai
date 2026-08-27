@@ -36,6 +36,11 @@ return [
         'oanda_api_url' => ['label' => 'OANDA API base URL', 'help' => 'Example: https://api-fxtrade.oanda.com or https://api-fxpractice.oanda.com'],
     ],
 
+    'TradingView workspace' => [
+        'tradingview_exchange' => ['label' => 'TradingView exchange code', 'help' => 'Example: OANDA, FX, FOREXCOM'],
+        'tradingview_symbol_prefix' => ['label' => 'TradingView symbol prefix', 'help' => 'Optional prefix for broker symbols, e.g. EURUSD or FX:'],
+    ],
+
     'News & economic calendar' => [
         'news_api_key' => ['label' => 'News / sentiment API key', 'help' => 'e.g. Finnhub, NewsAPI'],
         'economic_calendar_api_key' => ['label' => 'Economic calendar API key', 'help' => 'e.g. Trading Economics, Finnhub'],

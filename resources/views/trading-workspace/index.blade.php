@@ -25,6 +25,15 @@
         </div>
     </div>
 
+    <div class="bg-panel border border-line rounded-lg px-4 py-3 flex flex-wrap items-center gap-2 text-xs">
+        <span class="font-mono text-muted">TOOLS</span>
+        <button type="button" class="toolbar-btn border border-line rounded px-3 py-1.5 hover:border-brass/60 hover:text-brass">Indicators</button>
+        <button type="button" class="toolbar-btn border border-line rounded px-3 py-1.5 hover:border-brass/60 hover:text-brass">Drawing</button>
+        <button type="button" class="toolbar-btn border border-line rounded px-3 py-1.5 hover:border-brass/60 hover:text-brass">Layouts</button>
+        <button type="button" class="toolbar-btn border border-line rounded px-3 py-1.5 hover:border-brass/60 hover:text-brass">Compare</button>
+        <a href="{{ route('admin.settings') }}" class="ml-auto text-brass hover:underline">Edit workspace mapping</a>
+    </div>
+
     <div class="grid lg:grid-cols-[1.1fr_1.7fr_0.9fr] gap-6">
         <div class="space-y-4">
             <div class="bg-panel border border-line rounded-lg p-5">
@@ -244,6 +253,11 @@ document.querySelectorAll('.watch-item').forEach(btn => {
     btn.addEventListener('click', () => {
         document.getElementById('symbol').value = btn.dataset.symbol;
         refreshAll();
+    });
+});
+document.querySelectorAll('.toolbar-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.getElementById('widget-status').textContent = `${btn.textContent.trim()} clicked. TradingView widget is active.`;
     });
 });
 document.querySelectorAll('.tf-btn').forEach(btn => {
