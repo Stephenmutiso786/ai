@@ -6,7 +6,7 @@
         <div>
             <p class="font-mono text-xs tracking-[0.2em] text-brass mb-2">LIVE TRADING VIEW</p>
             <h1 class="font-display text-3xl">Trading Workspace</h1>
-            <p class="text-sm text-muted mt-2">Twelve Data-backed candles with trained AI overlays, broker state, and live trade monitoring.</p>
+            <p class="text-sm text-muted mt-2">Official TradingView widget with real market data, AI signal overlays, and broker state.</p>
         </div>
         <div class="flex flex-wrap items-center gap-3">
             <label class="text-xs font-mono text-muted">SYMBOL</label>
@@ -16,10 +16,10 @@
                 @endforeach
             </select>
             <div class="flex items-center gap-2">
-                <button data-tf="M15" class="tf-btn border border-line rounded px-3 py-2 text-xs">M15</button>
-                <button data-tf="H1" class="tf-btn border border-brass/50 text-brass rounded px-3 py-2 text-xs">H1</button>
-                <button data-tf="H4" class="tf-btn border border-line rounded px-3 py-2 text-xs">H4</button>
-                <button data-tf="D1" class="tf-btn border border-line rounded px-3 py-2 text-xs">D1</button>
+                <button data-tf="15" class="tf-btn border border-line rounded px-3 py-2 text-xs">15m</button>
+                <button data-tf="60" class="tf-btn border border-brass/50 text-brass rounded px-3 py-2 text-xs">1H</button>
+                <button data-tf="240" class="tf-btn border border-line rounded px-3 py-2 text-xs">4H</button>
+                <button data-tf="D" class="tf-btn border border-line rounded px-3 py-2 text-xs">1D</button>
             </div>
             <div id="health-chip" class="text-xs font-mono px-3 py-2 rounded border border-line text-muted">Checking feed…</div>
         </div>
@@ -29,16 +29,16 @@
         <div class="bg-panel border border-line rounded-lg overflow-hidden">
             <div class="flex items-center justify-between px-5 py-3 border-b border-line">
                 <div>
-                    <p class="font-mono text-[11px] tracking-[0.15em] text-muted">CANDLE CHART</p>
-                    <p id="chart-meta" class="text-xs text-muted mt-1">Loading…</p>
+                    <p class="font-mono text-[11px] tracking-[0.15em] text-muted">TRADINGVIEW CHART</p>
+                    <p id="chart-meta" class="text-xs text-muted mt-1">Loading TradingView widget…</p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <span class="font-mono text-[11px] text-gain">Twelve Data</span>
+                    <span class="font-mono text-[11px] text-gain">Official widget</span>
                     <span class="font-mono text-[11px] text-muted">|</span>
-                    <span class="font-mono text-[11px] text-gain">Trained signals</span>
+                    <span class="font-mono text-[11px] text-gain">Real market overlays</span>
                 </div>
             </div>
-            <div id="chart" style="height:560px;"></div>
+            <div id="tv-chart" style="height:560px;"></div>
         </div>
 
         <div class="space-y-4">
@@ -71,52 +71,53 @@
     </div>
 </div>
 
-<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+<script src="https://s3.tradingview.com/tv.js"></script>
 <script>
-let chart, candleSeries, signalEntrySeries, signalStopSeries, signalTakeSeries;
-let currentTimeframe = 'H1';
+let tvWidget = null;
+let currentTimeframe = '60';
 
 function currentSymbol() {
     return document.getElementById('symbol').value;
 }
 
-function ensureChart() {
-    if (chart) return;
-    chart = LightweightCharts.createChart(document.getElementById('chart'), {
-        height: 560,
-        layout: {
-            background: { color: 'transparent' },
-            textColor: '#cbd5e1',
-        },
-        grid: {
-            vertLines: { color: 'rgba(148,163,184,0.08)' },
-            horzLines: { color: 'rgba(148,163,184,0.08)' },
-        },
-        crosshair: { mode: 1 },
-        rightPriceScale: { borderColor: 'rgba(148,163,184,0.18)' },
-        timeScale: { borderColor: 'rgba(148,163,184,0.18)' },
-    });
-    candleSeries = chart.addCandlestickSeries({
-        upColor: '#22c55e',
-        downColor: '#ef4444',
-        borderUpColor: '#22c55e',
-        borderDownColor: '#ef4444',
-        wickUpColor: '#22c55e',
-        wickDownColor: '#ef4444',
-    });
-    signalEntrySeries = chart.addLineSeries({ color: '#f59e0b', lineWidth: 2 });
-    signalStopSeries = chart.addLineSeries({ color: '#ef4444', lineWidth: 2 });
-    signalTakeSeries = chart.addLineSeries({ color: '#22c55e', lineWidth: 2 });
+function intervalMap(tf) {
+    return tf === 'D' ? 'D' : tf;
 }
 
-async function loadCandles() {
+function widgetSymbol(symbol) {
+    return symbol.includes(':') ? symbol : `OANDA:${symbol}`;
+}
+
+function ensureWidget() {
     const symbol = currentSymbol();
-    const r = await fetch(`/api/workspace/candles?symbol=${encodeURIComponent(symbol)}&timeframe=${encodeURIComponent(currentTimeframe)}&limit=800`);
-    const d = await r.json();
-    ensureChart();
-    candleSeries.setData(d.candles);
-    chart.timeScale().fitContent();
-    document.getElementById('chart-meta').textContent = `${symbol} · ${currentTimeframe} · ${d.candles.length} candles · refreshed ${new Date().toLocaleTimeString()}`;
+    const container = document.getElementById('tv-chart');
+    container.innerHTML = '';
+
+    tvWidget = new TradingView.widget({
+        autosize: true,
+        symbol: widgetSymbol(symbol),
+        interval: intervalMap(currentTimeframe),
+        timezone: 'Africa/Nairobi',
+        theme: 'dark',
+        style: '1',
+        locale: 'en',
+        enable_publishing: false,
+        hide_top_toolbar: false,
+        hide_legend: false,
+        save_image: false,
+        allow_symbol_change: false,
+        container_id: 'tv-chart',
+        studies: ['MASimple@tv-basicstudies', 'RSI@tv-basicstudies', 'ATR@tv-basicstudies'],
+        disabled_features: ['use_localstorage_for_settings'],
+        enabled_features: ['study_templates'],
+        details: true,
+        withdateranges: true,
+        hotlist: false,
+        calendar: false,
+        support_host: 'https://www.tradingview.com',
+    });
+
+    document.getElementById('chart-meta').textContent = `${symbol} · ${currentTimeframe}`;
 }
 
 async function loadSignal() {
@@ -126,9 +127,6 @@ async function loadSignal() {
     const el = document.getElementById('signal-card');
     if (!d.signal) {
         el.innerHTML = '<div class="text-muted">No trained signal for this symbol yet.</div>';
-        signalEntrySeries.setData([]);
-        signalStopSeries.setData([]);
-        signalTakeSeries.setData([]);
         return;
     }
 
@@ -142,25 +140,11 @@ async function loadSignal() {
         <div class="mt-2 text-xs text-muted">${sig.reasoning ?? ''}</div>
         <div class="mt-2 font-mono text-[10px] text-muted">Updated: ${sig.generated_at ? new Date(sig.generated_at).toLocaleString() : '—'}</div>
     `;
-
-    const lastTime = candleSeries.getData().slice(-1)[0]?.time;
-    if (lastTime && sig.direction !== 'wait') {
-        signalEntrySeries.setData([{ time: lastTime, value: Number(sig.entry) }]);
-        signalStopSeries.setData([{ time: lastTime, value: Number(sig.stop_loss) }]);
-        signalTakeSeries.setData([{ time: lastTime, value: Number(sig.take_profit) }]);
-        candleSeries.setMarkers([
-            { time: lastTime, position: 'belowBar', color: '#f59e0b', shape: 'arrowUp', text: `Entry ${sig.direction}` },
-            { time: lastTime, position: 'aboveBar', color: '#ef4444', shape: 'arrowDown', text: 'SL' },
-            { time: lastTime, position: 'aboveBar', color: '#22c55e', shape: 'arrowDown', text: 'TP' },
-        ]);
-    } else {
-        candleSeries.setMarkers([]);
-    }
 }
 
 async function loadAnalysis() {
     const symbol = currentSymbol();
-    const r = await fetch(`/api/workspace/analysis?symbol=${encodeURIComponent(symbol)}&timeframe=H1&limit=300`);
+    const r = await fetch(`/api/workspace/analysis?symbol=${encodeURIComponent(symbol)}&timeframe=${encodeURIComponent(currentTimeframe)}&limit=300`);
     const d = await r.json();
     const el = document.getElementById('analysis-card');
     if (!d.ready) {
@@ -178,16 +162,6 @@ async function loadAnalysis() {
         </div>
         <div class="mt-3 text-xs text-muted">Regime: ${d.regime} · Candles: ${d.candle_count}</div>
     `;
-}
-
-async function loadHealth() {
-    const symbol = currentSymbol();
-    const r = await fetch(`/api/workspace/health?symbol=${encodeURIComponent(symbol)}&timeframe=${encodeURIComponent(currentTimeframe)}`);
-    const d = await r.json();
-    const chip = document.getElementById('health-chip');
-    const candleAt = d.market_sync?.last_candle_at ? new Date(d.market_sync.last_candle_at).toLocaleString() : 'no candles';
-    const signalAt = d.signal?.generated_at ? new Date(d.signal.generated_at).toLocaleString() : 'no signal';
-    chip.textContent = `${d.provider} · candles ${candleAt} · signal ${signalAt}`;
 }
 
 async function loadBroker() {
@@ -212,9 +186,23 @@ async function loadPerformance() {
     document.getElementById('performance-meta').textContent = `${d.trades} closed trades`;
 }
 
+async function loadHealth() {
+    const symbol = currentSymbol();
+    const r = await fetch(`/api/workspace/health?symbol=${encodeURIComponent(symbol)}&timeframe=${encodeURIComponent(currentTimeframe)}`);
+    const d = await r.json();
+    const chip = document.getElementById('health-chip');
+    const candleAt = d.market_sync?.last_candle_at ? new Date(d.market_sync.last_candle_at).toLocaleString() : 'no candles';
+    const signalAt = d.signal?.generated_at ? new Date(d.signal.generated_at).toLocaleString() : 'no signal';
+    chip.textContent = `${d.provider} · candles ${candleAt} · signal ${signalAt}`;
+}
+
+function refreshWidget() {
+    ensureWidget();
+}
+
 async function refreshAll() {
     try {
-        await loadCandles();
+        refreshWidget();
         await loadSignal();
         await loadAnalysis();
         await loadHealth();
@@ -234,7 +222,8 @@ document.querySelectorAll('.tf-btn').forEach(btn => {
         refreshAll();
     });
 });
-refreshAll();
+
+window.addEventListener('load', refreshAll);
 setInterval(refreshAll, 15000);
 </script>
 @endsection
