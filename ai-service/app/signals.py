@@ -22,8 +22,9 @@ def build_signal(model_bundle: dict, rows: list[dict[str, Any]], symbol: str, ti
     reward_distance = stop_distance * 2.0
     stop_loss = entry - stop_distance if direction == 'buy' else (entry + stop_distance if direction == 'sell' else None)
     take_profit = entry + reward_distance if direction == 'buy' else (entry - reward_distance if direction == 'sell' else None)
-    trend = float(latest.get('trend_gap', 0.0))
-    regime = 'trending' if abs(trend) > max(abs(entry) * 0.0002, 1e-8) else 'ranging'
+    trend = float(latest.get('trend', 0.0))
+    trend_50 = float(latest.get('trend_50', 0.0))
+    regime = 'trending' if abs(trend) + abs(trend_50) > max(abs(entry) * 0.00025, 1e-8) else 'ranging'
     return {
         'symbol': symbol,
         'timeframe': timeframe,
@@ -35,5 +36,5 @@ def build_signal(model_bundle: dict, rows: list[dict[str, Any]], symbol: str, ti
         'take_profit': take_profit,
         'risk_reward': 2.0 if direction != 'wait' else None,
         'market_regime': regime,
-        'reasoning': f'Model probability_up={p:.4f}; ATR-based risk levels; regime={regime}.',
+        'reasoning': f'Model probability_up={p:.4f}; ATR-based risk levels; trend={trend:.6f}; regime={regime}.',
     }

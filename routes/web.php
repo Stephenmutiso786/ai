@@ -42,6 +42,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/broker/connect', [BrokerAccountController::class, 'store'])->middleware('market.open')->name('broker.store');
     Route::get('/trading-workspace', [TradingWorkspaceController::class, 'index'])->name('trading.workspace');
     Route::get('/api/workspace/candles', [TradingWorkspaceController::class, 'candles'])->name('workspace.candles');
+    Route::get('/api/workspace/latest-signal', [TradingWorkspaceController::class, 'latestSignal'])->name('workspace.latest-signal');
     Route::get('/api/workspace/positions', [TradingWorkspaceController::class, 'positions'])->name('workspace.positions');
     Route::get('/api/workspace/performance', [TradingWorkspaceController::class, 'performance'])->name('workspace.performance');
 
@@ -65,6 +66,7 @@ Route::middleware(['auth', 'can:access-admin'])->prefix('admin')->name('admin.')
     Route::post('/ai-lab/backtests', [AiLabController::class, 'backtest'])->name('ai-lab.backtest');
     Route::post('/ai-lab/models/{model}/deploy', [AiLabController::class, 'deploy'])->name('ai-lab.models.deploy');
     Route::post('/ai-lab/diagnose', [AiLabController::class, 'diagnose'])->name('ai-lab.diagnose');
+    Route::post('/ai-lab/load-latest-trained-model', [AiLabController::class, 'loadLatestTrainedModel'])->name('ai-lab.load-latest-trained-model');
 
     Route::get('/broker-certification', [BrokerCertificationController::class, 'index'])->name('broker-certification.index');
     Route::post('/broker-certification/{account}/run', [BrokerCertificationController::class, 'run'])->name('broker-certification.run');

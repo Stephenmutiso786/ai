@@ -23,7 +23,10 @@
 @endif
 <form method="POST" action="{{ route('admin.ai-lab.diagnose') }}" class="mb-6">
     @csrf
-    <button class="border border-line px-4 py-2 rounded text-sm">Diagnose AI</button>
+    <div class="flex flex-wrap gap-3">
+        <button class="border border-line px-4 py-2 rounded text-sm">Diagnose AI</button>
+        <button formaction="{{ route('admin.ai-lab.load-latest-trained-model') }}" class="bg-brass text-ink px-4 py-2 rounded text-sm">Load latest trained model</button>
+    </div>
 </form>
 <div class="grid md:grid-cols-2 gap-4 mb-8">
     <div class="bg-panel border border-line rounded-lg p-5">

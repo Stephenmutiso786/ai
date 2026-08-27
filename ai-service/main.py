@@ -22,6 +22,18 @@ def dataset_path(dataset_id): return DATA / f'dataset-{dataset_id}.csv'
 
 def model_path(model_id): return MODELS / f'model-{model_id}.joblib'
 
+def latest_model_path():
+    candidates = sorted(MODELS.glob('*.joblib'), key=lambda p: p.stat().st_mtime, reverse=True)
+    return candidates[0] if candidates else None
+
+def load_bundle(model_id: int):
+    path = model_path(model_id)
+    if not path.exists():
+        path = latest_model_path()
+    if not path or not path.exists():
+        raise HTTPException(404, 'Model artifact not found')
+    return joblib.load(path)
+
 @app.get('/health')
 def health(): return {'status':'ok','service':'stetech-ai','version':'2.0.0'}
 
@@ -38,13 +50,12 @@ def training_run(payload: TrainingRun):
 
 @app.post('/backtests', dependencies=[Depends(require_token)])
 def backtest(payload: Backtest):
-    path = model_path(payload.model_id)
-    if not path.exists(): raise HTTPException(404,'Model artifact not found')
+    bundle = load_bundle(payload.model_id)
     dataset_id = payload.config.get('dataset_id')
     if not dataset_id: raise HTTPException(422,'config.dataset_id is required')
     data_path = dataset_path(int(dataset_id))
     if not data_path.exists(): raise HTTPException(404,'Dataset artifact not found')
-    bundle = joblib.load(path); frame = make_features(validate_ohlcv(pd.read_csv(data_path)))
+    frame = make_features(validate_ohlcv(pd.read_csv(data_path)))
     frame['prediction'] = bundle['model'].predict_proba(frame[FEATURE_COLUMNS])[:,1]
     results = run_backtest(frame, payload.config)
     return {'job_reference':f'backtest-{payload.backtest_id}','accepted':True,'status':'completed','results':results}
@@ -52,23 +63,19 @@ def backtest(payload: Backtest):
 
 @app.post('/signals/live', dependencies=[Depends(require_token)])
 async def live_signal(payload: LiveSignalRequest):
-    path = model_path(payload.model_id)
-    if not path.exists(): raise HTTPException(404, 'Model artifact not found')
+    bundle = load_bundle(payload.model_id)
     try:
         provider = payload.provider.lower()
         if provider == 'oanda': rows = await OandaProvider(payload.provider_config).candles(payload.symbol, payload.timeframe, payload.count)
         elif provider in ('twelve','twelvedata','twelve_data'): rows = await TwelveDataProvider(payload.provider_config).candles(payload.symbol, payload.timeframe, payload.count)
         else: raise HTTPException(422, 'Unsupported market-data provider')
-        bundle = joblib.load(path)
         return build_signal(bundle, rows, payload.symbol, payload.timeframe)
     except HTTPException: raise
     except Exception as e: raise HTTPException(502, str(e))
 
 @app.post('/inference', dependencies=[Depends(require_token)])
 def inference(payload: InferenceRequest):
-    path = model_path(payload.model_id)
-    if not path.exists(): raise HTTPException(404,'Model artifact not found')
-    bundle = joblib.load(path)
+    bundle = load_bundle(payload.model_id)
     missing = [f for f in bundle['features'] if f not in payload.features]
     if missing: raise HTTPException(422, f'Missing features: {missing}')
     row = pd.DataFrame([{f:payload.features[f] for f in bundle['features']}])

@@ -7,6 +7,7 @@ use App\Models\AiDataset;
 use App\Models\AiModel;
 use App\Models\AiTrainingRun;
 use App\Models\Setting;
+use Illuminate\Support\Facades\File;
 use App\Services\AI\AiLabClient;
 use Illuminate\Http\Request;
 
@@ -67,5 +68,33 @@ class AiLabController extends Controller
                 'latest_backtest' => $latestBacktest?->status,
             ],
         ]);
+    }
+
+    public function loadLatestTrainedModel()
+    {
+        $artifactPath = base_path('ai-service/artifacts/model-eurusd-multitimeframe.joblib');
+
+        if (! File::exists($artifactPath)) {
+            return back()->with('status', 'No trained artifact found yet. Train the model first.');
+        }
+
+        $model = AiModel::where('status', 'live')->latest('updated_at')->first()
+            ?? AiModel::firstOrCreate(
+                ['name' => 'STETECH Core'],
+                ['version' => '1.0.0', 'framework' => 'fallback', 'status' => 'draft']
+            );
+
+        $model->forceFill([
+            'status' => 'live',
+            'framework' => 'trained-local',
+            'artifact_uri' => $artifactPath,
+            'metrics' => [
+                'source' => 'local_csv_training',
+                'artifact' => basename($artifactPath),
+                'loaded_at' => now()->toIso8601String(),
+            ],
+        ])->save();
+
+        return back()->with('status', "Loaded trained artifact into {$model->name} {$model->version}.");
     }
 }
