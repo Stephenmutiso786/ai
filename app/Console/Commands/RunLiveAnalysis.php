@@ -30,7 +30,7 @@ class RunLiveAnalysis extends Command
         $count = 0;
         foreach ($instruments as $instrument) {
             try {
-                $engine->generateFor($instrument, $timeframe);
+                $engine->generateFor($instrument, $timeframe, true);
                 $count++;
             } catch (\Throwable $e) {
                 $this->error($instrument->symbol . ': ' . $e->getMessage());

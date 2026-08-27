@@ -75,7 +75,7 @@ class DashboardController extends Controller
 
         foreach ($instruments as $instrument) {
             try {
-                $engine->generateFor($instrument, $timeframe);
+                $engine->generateFor($instrument, $timeframe, true);
                 $generated++;
             } catch (\Throwable $e) {
                 $errors[] = "{$instrument->symbol}: ".$e->getMessage();

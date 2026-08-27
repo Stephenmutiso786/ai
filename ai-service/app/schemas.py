@@ -30,6 +30,7 @@ class CallbackResult(BaseModel):
 
 class LiveSignalRequest(BaseModel):
     model_id: int
+    model_artifact_uri: str | None = None
     symbol: str
     timeframe: str = 'H1'
     provider: str = 'oanda'

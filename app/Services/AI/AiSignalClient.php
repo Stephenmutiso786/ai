@@ -1,12 +1,19 @@
 <?php
 namespace App\Services\AI;
 use App\Models\AiModel;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 
 class AiSignalClient
 {
-    public function liveSignal(AiModel $model, string $symbol, string $timeframe): array
+    public function liveSignal(AiModel $model, string $symbol, string $timeframe, bool $forceRefresh = false): array
     {
+        $cacheKey = 'ai:live-signal:'.sha1($model->id.'|'.$symbol.'|'.$timeframe.'|'.(auth()->id() ?: 0));
+        if (! $forceRefresh && Cache::has($cacheKey)) {
+            return Cache::get($cacheKey);
+        }
+
+        $payload = (function () use ($model, $symbol, $timeframe) {
         $url = setting('ai_service_url');
         $token = setting('ai_service_token');
         if (! $url || ! $token) {
@@ -40,6 +47,7 @@ class AiSignalClient
         ];
         $response = Http::timeout(20)->acceptJson()->withToken((string) $token)->post(rtrim($url, '/').'/signals/live', [
             'model_id' => $model->id,
+            'model_artifact_uri' => $this->artifactUriForModel($model),
             'symbol' => $symbol,
             'timeframe' => $timeframe,
             'provider' => $provider,
@@ -61,5 +69,17 @@ class AiSignalClient
         }
 
         return $payload;
+        })();
+
+        Cache::put($cacheKey, $payload, now()->addMinutes(5));
+
+        return $payload;
+    }
+
+    private function artifactUriForModel(AiModel $model): ?string
+    {
+        $uri = $model->artifact_uri ?: setting('ai_model_artifact_url') ?: setting('ai_model_artifact_path');
+
+        return $uri ?: null;
     }
 }

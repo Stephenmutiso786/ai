@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import pandas as pd
 from fastapi import FastAPI, Depends, HTTPException
+from fastapi import BackgroundTasks
 from app.schemas import TrainingRun, Backtest, InferenceRequest, LiveSignalRequest
 from app.security import require_token
 from app.market_data import validate_ohlcv
@@ -12,6 +13,7 @@ from app.signals import build_signal
 from app.providers.oanda import OandaProvider
 from app.providers.twelvedata import TwelveDataProvider
 import joblib
+import httpx
 
 ROOT = Path(__file__).resolve().parent
 DATA = ROOT / 'data'; MODELS = ROOT / 'artifacts'
@@ -26,9 +28,37 @@ def latest_model_path():
     candidates = sorted(MODELS.glob('*.joblib'), key=lambda p: p.stat().st_mtime, reverse=True)
     return candidates[0] if candidates else None
 
-def load_bundle(model_id: int):
+def model_artifact_cache_path(model_id: int) -> Path:
+    return MODELS / f'model-{model_id}.joblib'
+
+def ensure_artifact_from_source(model_id: int, source: str | None) -> Path | None:
+    if not source:
+        return None
+
+    source = source.strip()
+    if not source:
+        return None
+
+    local = Path(source)
+    if local.exists():
+        return local
+
+    if source.startswith('http://') or source.startswith('https://'):
+        target = model_artifact_cache_path(model_id)
+        if target.exists():
+            return target
+        response = httpx.get(source, timeout=30)
+        response.raise_for_status()
+        target.write_bytes(response.content)
+        return target
+
+    return None
+
+def load_bundle(model_id: int, artifact_uri: str | None = None):
     path = model_path(model_id)
     if not path.exists():
+        path = ensure_artifact_from_source(model_id, artifact_uri)
+    if not path or not path.exists():
         path = latest_model_path()
     if not path or not path.exists():
         raise HTTPException(404, 'Model artifact not found')
@@ -50,7 +80,7 @@ def training_run(payload: TrainingRun):
 
 @app.post('/backtests', dependencies=[Depends(require_token)])
 def backtest(payload: Backtest):
-    bundle = load_bundle(payload.model_id)
+    bundle = load_bundle(payload.model_id, payload.config.get('model_artifact_uri'))
     dataset_id = payload.config.get('dataset_id')
     if not dataset_id: raise HTTPException(422,'config.dataset_id is required')
     data_path = dataset_path(int(dataset_id))
@@ -63,7 +93,7 @@ def backtest(payload: Backtest):
 
 @app.post('/signals/live', dependencies=[Depends(require_token)])
 async def live_signal(payload: LiveSignalRequest):
-    bundle = load_bundle(payload.model_id)
+    bundle = load_bundle(payload.model_id, payload.model_artifact_uri)
     try:
         plan = payload.provider_config.get('plan', {})
         provider = payload.provider.lower()

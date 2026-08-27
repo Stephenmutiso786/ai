@@ -8,7 +8,7 @@ use App\Services\AI\AiSignalClient;
 class SignalEngine
 {
     public function __construct(private AiSignalClient $client) {}
-    public function generateFor(Instrument $instrument, string $timeframe = 'H1'): AiSignal
+    public function generateFor(Instrument $instrument, string $timeframe = 'H1', bool $forceRefresh = false): AiSignal
     {
         $model = AiModel::query()
             ->whereIn('status', ['live', 'approved', 'paper', 'shadow', 'trained', 'validating'])
@@ -19,7 +19,7 @@ class SignalEngine
         if (! $model) {
             throw new \RuntimeException('No AI model is available. Create or deploy a model in AI Lab first.');
         }
-        $signal = $this->client->liveSignal($model, $instrument->symbol, $timeframe);
+        $signal = $this->client->liveSignal($model, $instrument->symbol, $timeframe, $forceRefresh);
         return AiSignal::create([
             'instrument_id'=>$instrument->id,'direction'=>$signal['direction'],'confidence'=>$signal['confidence'],
             'entry'=>$signal['entry'],'stop_loss'=>$signal['stop_loss'],'take_profit'=>$signal['take_profit'],
