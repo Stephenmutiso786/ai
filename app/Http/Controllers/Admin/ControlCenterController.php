@@ -4,10 +4,14 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\BrokerAccount;
+use App\Models\AiSignal;
+use App\Models\AiTrainingRun;
 use App\Models\RiskProfile;
 use App\Models\Subscription;
 use App\Models\Trade;
 use App\Models\User;
+use App\Models\Setting;
+use Illuminate\Support\Facades\DB;
 
 class ControlCenterController extends Controller
 {
@@ -23,8 +27,17 @@ class ControlCenterController extends Controller
         ];
 
         $recentTrades = Trade::with(['user', 'instrument'])->latest()->limit(25)->get();
+        $latestSignal = AiSignal::with('instrument')->latest('generated_at')->first();
+        $latestTrainingRun = AiTrainingRun::with(['model', 'dataset'])->latest('created_at')->first();
+        $readiness = [
+            'live_trading_enabled' => filter_var(config('live_trading.enabled', false), FILTER_VALIDATE_BOOL) ? 'ok' : 'blocked',
+            'broker_execution_mode' => config('services.broker_execution_mode', 'paper') === 'live' ? 'ok' : 'blocked',
+            'trained_model' => $latestTrainingRun?->model?->artifact_uri ? 'ok' : 'blocked',
+            'fresh_signal' => $latestSignal ? 'ok' : 'blocked',
+            'market_provider' => Setting::getValue('ai_market_data_provider') ? 'ok' : 'blocked',
+        ];
 
-        return view('admin.control-center', compact('stats', 'recentTrades'));
+        return view('admin.control-center', compact('stats', 'recentTrades', 'readiness', 'latestSignal', 'latestTrainingRun'));
     }
 
     /**

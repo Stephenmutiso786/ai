@@ -13,6 +13,32 @@
         </div>
     @endif
 
+    <div class="bg-panel border border-line rounded-lg p-5 mb-8">
+        <div class="flex items-center justify-between gap-3 mb-4">
+            <div>
+                <p class="font-mono text-[11px] tracking-[0.15em] text-muted">TRADE READINESS</p>
+                <p class="text-sm text-muted mt-1">Exact blockers for live execution. All must be green before a live order can be sent.</p>
+            </div>
+            <span class="font-mono text-[10px] text-brass">LIVE TRADE GATE</span>
+        </div>
+        <div class="grid md:grid-cols-5 gap-3">
+            @foreach($readiness as $key => $state)
+                <div class="border rounded-lg p-4 {{ $state === 'ok' ? 'border-gain/30 bg-gain/5' : 'border-loss/30 bg-loss/5' }}">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="font-mono text-[10px] tracking-wide text-muted">{{ strtoupper(str_replace('_', ' ', $key)) }}</span>
+                        <span class="font-mono text-[10px] px-2 py-0.5 rounded border {{ $state === 'ok' ? 'border-gain/40 text-gain' : 'border-loss/40 text-loss' }}">
+                            {{ strtoupper($state) }}
+                        </span>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+        <div class="grid md:grid-cols-2 gap-3 mt-4 text-xs text-muted">
+            <div class="bg-ink/40 rounded p-3 border border-line">Latest signal: {{ $latestSignal?->direction ? strtoupper($latestSignal->direction).' '.$latestSignal->instrument?->symbol : 'none' }}</div>
+            <div class="bg-ink/40 rounded p-3 border border-line">Latest training run: {{ $latestTrainingRun?->status ?? 'none' }}{{ $latestTrainingRun?->model?->artifact_uri ? ' · artifact ready' : '' }}</div>
+        </div>
+    </div>
+
     <div class="flex items-center justify-between mb-8">
         <h1 class="font-display text-3xl">STETECH control center</h1>
         <form method="POST" action="{{ route('admin.emergency-stop') }}" onsubmit="return confirm('Halt trading for every account? This cannot be undone by mistake.');">
