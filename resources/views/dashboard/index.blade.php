@@ -50,10 +50,17 @@
                 @endif
             </p>
         </div>
-        <form method="POST" action="{{ route('run.trigger') }}">
-            @csrf
-            <button class="bg-brass text-ink px-5 py-2.5 rounded font-medium text-sm hover:bg-brass/90 transition">Run AI analysis</button>
-        </form>
+        <div class="flex flex-wrap gap-3">
+            <form method="POST" action="{{ route('run.trigger') }}">
+                @csrf
+                <button class="bg-brass text-ink px-5 py-2.5 rounded font-medium text-sm hover:bg-brass/90 transition">Run AI analysis</button>
+            </form>
+            <form method="POST" action="{{ route('dashboard.refresh-signals') }}">
+                @csrf
+                <button class="border border-line px-5 py-2.5 rounded font-medium text-sm hover:border-brass/60 hover:text-brass transition">Refresh live signals</button>
+            </form>
+            <a href="{{ route('trading.workspace') }}" class="border border-line px-5 py-2.5 rounded font-medium text-sm hover:border-brass/60 hover:text-brass transition">Open Trading Workspace</a>
+        </div>
     </div>
 
     <!-- Account summary -->

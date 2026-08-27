@@ -25,3 +25,8 @@ Schedule::command('stetech:monitor')->everyMinute()->withoutOverlapping();
 Schedule::command('ai:sync-market-candles --timeframe=H1 --limit=500')
     ->everyFiveMinutes()
     ->withoutOverlapping();
+
+// Generate fresh signals from the latest live market data.
+Schedule::command('ai:run-live-analysis --timeframe=H1')
+    ->everyTenMinutes()
+    ->withoutOverlapping();

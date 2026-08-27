@@ -37,6 +37,7 @@ Route::get('/payment/{subscription}/status', [PaymentController::class, 'pollSta
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/run', [SignalRunController::class, 'run'])->middleware('market.open')->name('run.trigger');
+    Route::post('/dashboard/refresh-signals', [DashboardController::class, 'refreshSignals'])->middleware('market.open')->name('dashboard.refresh-signals');
 
     Route::get('/broker/connect', [BrokerAccountController::class, 'create'])->name('broker.connect');
     Route::post('/broker/connect', [BrokerAccountController::class, 'store'])->middleware('market.open')->name('broker.store');
