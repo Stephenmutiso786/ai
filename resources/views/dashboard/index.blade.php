@@ -10,6 +10,11 @@
     @endif
     @if(session('run_error'))
         <div class="mb-6 border border-loss/40 bg-loss/10 text-loss text-sm rounded px-4 py-3">{{ session('run_error') }}</div>
+        @if(auth()->user()->isAdmin() && session('run_error_admin'))
+            <div class="mb-6 border border-line bg-ink/60 text-muted text-xs rounded px-4 py-3 font-mono">
+                Admin detail: {{ session('run_error_admin') }}
+            </div>
+        @endif
     @endif
 
     <!-- Usage / run status -->

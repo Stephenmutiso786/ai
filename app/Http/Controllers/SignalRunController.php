@@ -33,7 +33,15 @@ class SignalRunController extends Controller
                 $generated++;
             }
         } catch (\Throwable $e) {
-            return redirect()->route('dashboard')->with('run_error', 'AI analysis failed: '.$e->getMessage());
+            $message = 'AI analysis could not be completed right now. Please try again.';
+
+            $response = redirect()->route('dashboard')->with('run_error', $message);
+
+            if ($user->isAdmin()) {
+                $response->with('run_error_admin', 'AI analysis failed: '.$e->getMessage());
+            }
+
+            return $response;
         }
 
         $limiter->record($user, $subscription, $request, [

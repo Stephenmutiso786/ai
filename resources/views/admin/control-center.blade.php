@@ -7,6 +7,11 @@
     @if(session('status'))
         <div class="mb-6 border border-loss/40 bg-loss/10 text-loss text-sm rounded px-4 py-3">{{ session('status') }}</div>
     @endif
+    @if(session('run_error_admin'))
+        <div class="mb-6 border border-line bg-ink/60 text-muted text-xs rounded px-4 py-3 font-mono">
+            AI detail: {{ session('run_error_admin') }}
+        </div>
+    @endif
 
     <div class="flex items-center justify-between mb-8">
         <h1 class="font-display text-3xl">STETECH control center</h1>
