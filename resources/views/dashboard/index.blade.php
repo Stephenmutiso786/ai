@@ -89,6 +89,7 @@
                                 <div class="h-full {{ $signal->direction === 'buy' ? 'bg-gain' : ($signal->direction === 'sell' ? 'bg-loss' : 'bg-muted') }}" style="width: {{ $signal->confidence }}%"></div>
                             </div>
                             <span class="font-mono text-xs text-muted w-10 text-right shrink-0">{{ $signal->confidence }}%</span>
+                            <span class="font-mono text-[10px] text-muted w-full sm:w-auto sm:ml-auto">updated {{ $signal->generated_at?->diffForHumans() }}</span>
                         @else
                             <span class="font-mono text-xs text-muted">no signal yet</span>
                         @endif
