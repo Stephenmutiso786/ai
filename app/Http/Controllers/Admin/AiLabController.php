@@ -17,11 +17,18 @@ class AiLabController extends Controller
     public function index(){
         $latestTrainingRun = AiTrainingRun::with(['model', 'dataset'])->latest('created_at')->first();
         $latestBacktest = AiBacktest::with('model')->latest('created_at')->first();
+        $trainingCounts = [
+            'queued' => AiTrainingRun::where('status', 'queued')->count(),
+            'running' => AiTrainingRun::where('status', 'running')->count(),
+            'completed' => AiTrainingRun::where('status', 'completed')->count(),
+            'failed' => AiTrainingRun::where('status', 'failed')->count(),
+        ];
         return view('admin.ai-lab.index', [
             'stats'=>['models'=>AiModel::count(),'live'=>AiModel::where('status','live')->count(),'training'=>AiTrainingRun::whereIn('status',['queued','running'])->count(),'backtests'=>AiBacktest::where('status','completed')->count()],
             'models'=>AiModel::latest()->limit(20)->get(), 'runs'=>AiTrainingRun::with(['model','dataset'])->latest()->limit(15)->get(), 'backtests'=>AiBacktest::with('model')->latest()->limit(15)->get(),
             'latestTrainingRun' => $latestTrainingRun,
             'latestBacktest' => $latestBacktest,
+            'trainingCounts' => $trainingCounts,
         ]);
     }
     public function datasets(){ return view('admin.ai-lab.datasets',['datasets'=>AiDataset::latest()->paginate(25)]); }
@@ -151,5 +158,19 @@ class AiLabController extends Controller
         ])->save();
 
         return back()->with('status', "Loaded trained artifact into {$model->name} {$model->version}.");
+    }
+
+    public function trainingJobs()
+    {
+        return view('admin.ai-lab.jobs', [
+            'runs' => AiTrainingRun::with(['model', 'dataset'])->latest()->paginate(30),
+            'trainingCounts' => [
+                'queued' => AiTrainingRun::where('status', 'queued')->count(),
+                'running' => AiTrainingRun::where('status', 'running')->count(),
+                'completed' => AiTrainingRun::where('status', 'completed')->count(),
+                'failed' => AiTrainingRun::where('status', 'failed')->count(),
+            ],
+            'latestHealthChecks' => DB::table('system_health_checks')->orderByDesc('checked_at')->limit(10)->get(),
+        ]);
     }
 }

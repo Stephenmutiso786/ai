@@ -66,6 +66,7 @@ Route::middleware(['auth', 'can:access-admin'])->prefix('admin')->name('admin.')
     Route::post('/ai-lab/datasets', [AiLabController::class, 'storeDataset'])->name('ai-lab.datasets.store');
     Route::get('/ai-lab/models', [AiLabController::class, 'models'])->name('ai-lab.models');
     Route::post('/ai-lab/models', [AiLabController::class, 'storeModel'])->name('ai-lab.models.store');
+    Route::get('/ai-lab/jobs', [AiLabController::class, 'trainingJobs'])->name('ai-lab.jobs');
     Route::post('/ai-lab/training-runs', [AiLabController::class, 'train'])->name('ai-lab.train');
     Route::post('/ai-lab/backtests', [AiLabController::class, 'backtest'])->name('ai-lab.backtest');
     Route::post('/ai-lab/models/{model}/deploy', [AiLabController::class, 'deploy'])->name('ai-lab.models.deploy');
