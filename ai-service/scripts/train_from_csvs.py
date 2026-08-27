@@ -18,11 +18,13 @@ from app.modeling import FEATURE_COLUMNS, train_classifier
 
 
 def load_csv(path: Path, timeframe: str) -> pd.DataFrame:
-    df = pd.read_csv(
-        path,
-        header=None,
-        names=["timestamp", "open", "high", "low", "close", "volume"],
-    )
+    df = pd.read_csv(path)
+    if not set(["timestamp", "open", "high", "low", "close"]).issubset(df.columns):
+        df = pd.read_csv(
+            path,
+            header=None,
+            names=["timestamp", "open", "high", "low", "close", "volume"],
+        )
     df["timeframe"] = timeframe
     return validate_ohlcv(df)
 

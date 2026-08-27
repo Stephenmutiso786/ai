@@ -21,6 +21,7 @@ class BrokerAccount extends Model
         return [
             'connected_at' => 'datetime',
             'verified_at' => 'datetime',
+            'last_synced_at' => 'datetime',
             'balance' => 'decimal:2',
             'equity' => 'decimal:2',
             'margin_available' => 'decimal:2',

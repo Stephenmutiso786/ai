@@ -12,6 +12,7 @@ use App\Services\Execution\BrokerAdapterRegistry;
 use App\Services\Signals\SignalEngine;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -20,7 +21,9 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        $instruments = Instrument::with('latestSignal')->where('is_active', true)->get();
+        $instruments = Cache::remember('dashboard:instruments', now()->addSeconds(30), function () {
+            return Instrument::with('latestSignal')->where('is_active', true)->get();
+        });
 
         $openTrades = Trade::with('instrument')
             ->where('user_id', $user->id)
@@ -32,7 +35,7 @@ class DashboardController extends Controller
         $brokerAccount = $user->brokerAccounts()->where('connection_status', 'connected')->latest('verified_at')->first()
             ?? $user->brokerAccounts()->latest()->first();
 
-        if ($brokerAccount && $brokerAccount->connection_status === 'connected') {
+        if ($brokerAccount && $brokerAccount->connection_status === 'connected' && (! $brokerAccount->last_synced_at || $brokerAccount->last_synced_at->lt(now()->subSeconds(45)))) {
             try {
                 $snapshot = $registry->for($brokerAccount)->accountSnapshot($brokerAccount);
                 $brokerAccount->forceFill([
@@ -47,9 +50,9 @@ class DashboardController extends Controller
             }
         }
 
-        $latestSignal = AiSignal::with('instrument')->latest('generated_at')->first();
-        $latestTrainingRun = AiTrainingRun::with(['model', 'dataset'])->latest('created_at')->first();
-        $latestBacktest = AiBacktest::with('model')->latest('created_at')->first();
+        $latestSignal = Cache::remember('dashboard:latest-signal', now()->addSeconds(20), fn () => AiSignal::with('instrument')->latest('generated_at')->first());
+        $latestTrainingRun = Cache::remember('dashboard:latest-training-run', now()->addSeconds(30), fn () => AiTrainingRun::with(['model', 'dataset'])->latest('created_at')->first());
+        $latestBacktest = Cache::remember('dashboard:latest-backtest', now()->addSeconds(30), fn () => AiBacktest::with('model')->latest('created_at')->first());
         $activeSymbol = $instruments->first()?->symbol;
         $timeframe = 'H1';
         $lastMarketCandle = $activeSymbol
