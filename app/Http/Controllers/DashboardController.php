@@ -7,10 +7,12 @@ use App\Models\AiBacktest;
 use App\Models\AiSignal;
 use App\Models\AiTrainingRun;
 use App\Models\Trade;
+use App\Models\Setting;
 use App\Services\Execution\BrokerAdapterRegistry;
 use App\Services\Signals\SignalEngine;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -48,6 +50,43 @@ class DashboardController extends Controller
         $latestSignal = AiSignal::with('instrument')->latest('generated_at')->first();
         $latestTrainingRun = AiTrainingRun::with(['model', 'dataset'])->latest('created_at')->first();
         $latestBacktest = AiBacktest::with('model')->latest('created_at')->first();
+        $activeSymbol = $instruments->first()?->symbol;
+        $timeframe = 'H1';
+        $lastMarketCandle = $activeSymbol
+            ? DB::table('market_data_candles')
+                ->where('symbol', $activeSymbol)
+                ->where('timeframe', $timeframe)
+                ->orderByDesc('time')
+                ->first()
+            : null;
+        $diagnostics = [
+            'market_data' => [
+                'status' => $lastMarketCandle ? 'ok' : 'critical',
+                'label' => $lastMarketCandle ? 'Market data synced' : 'No candle data yet',
+                'detail' => $lastMarketCandle?->time ? 'Last candle: '.$lastMarketCandle->time : 'The live market feed has not written candles into market_data_candles.',
+            ],
+            'ai_model' => [
+                'status' => $latestTrainingRun?->model?->artifact_uri || $latestTrainingRun?->model?->status === 'live' ? 'ok' : 'critical',
+                'label' => $latestTrainingRun?->model?->artifact_uri ? 'Model artifact available' : 'Model artifact missing',
+                'detail' => $latestTrainingRun?->model?->artifact_uri
+                    ? 'Artifact: '.$latestTrainingRun->model->artifact_uri
+                    : 'The deployed AI service still needs a reachable trained artifact.',
+            ],
+            'provider' => [
+                'status' => Setting::getValue('ai_market_data_provider') ? 'ok' : 'critical',
+                'label' => Setting::getValue('ai_market_data_provider') ? 'Provider configured' : 'Provider missing',
+                'detail' => Setting::getValue('ai_market_data_provider')
+                    ? 'Active provider: '.Setting::getValue('ai_market_data_provider')
+                    : 'Set the AI market-data provider in Settings.',
+            ],
+            'signal' => [
+                'status' => $latestSignal ? 'ok' : 'critical',
+                'label' => $latestSignal ? 'Last signal generated' : 'No live signal yet',
+                'detail' => $latestSignal?->generated_at
+                    ? 'Last signal: '.$latestSignal->generated_at->diffForHumans()
+                    : 'No signal has been written recently.',
+            ],
+        ];
 
         return view('dashboard.index', compact(
             'instruments',
@@ -56,7 +95,8 @@ class DashboardController extends Controller
             'brokerAccount',
             'latestSignal',
             'latestTrainingRun',
-            'latestBacktest'
+            'latestBacktest',
+            'diagnostics'
         ));
     }
 
