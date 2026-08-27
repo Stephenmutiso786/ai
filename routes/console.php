@@ -20,3 +20,8 @@ Schedule::command('subscriptions:expire')->hourly()->withoutOverlapping();
 
 // Continuous production dependency monitoring and incident creation.
 Schedule::command('stetech:monitor')->everyMinute()->withoutOverlapping();
+
+// Real candle sync for the TradingView-style workspace and AI training pipeline.
+Schedule::command('ai:sync-market-candles --timeframe=H1 --limit=500')
+    ->everyFiveMinutes()
+    ->withoutOverlapping();
