@@ -15,6 +15,10 @@ class SignalRunController extends Controller
         $user = Auth::user();
         $subscription = $user->subscription;
 
+        if ($user->isSuperAdmin()) {
+            $subscription = null;
+        }
+
         $check = $limiter->check($user, $subscription, $request);
 
         if (! $check->allowed) {

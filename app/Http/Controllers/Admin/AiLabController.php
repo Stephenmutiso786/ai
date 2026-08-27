@@ -6,6 +6,7 @@ use App\Models\AiBacktest;
 use App\Models\AiDataset;
 use App\Models\AiModel;
 use App\Models\AiTrainingRun;
+use App\Models\Setting;
 use App\Services\AI\AiLabClient;
 use Illuminate\Http\Request;
 
@@ -28,4 +29,43 @@ class AiLabController extends Controller
     public function train(Request $r, AiLabClient $client){ $d=$r->validate(['ai_model_id'=>'required|exists:ai_models,id','ai_dataset_id'=>'nullable|exists:ai_datasets,id','config'=>'nullable|array']); $run=AiTrainingRun::create($d+['requested_by'=>auth()->id(),'status'=>'queued']); $client->startTraining($run); return back()->with('status','Training run queued.'); }
     public function backtest(Request $r, AiLabClient $client){ $d=$r->validate(['ai_model_id'=>'required|exists:ai_models,id','instrument_symbol'=>'required|string|max:30','timeframe'=>'required|string|max:20','starts_at'=>'required|date','ends_at'=>'required|date','config'=>'nullable|array']); $b=AiBacktest::create($d+['requested_by'=>auth()->id(),'status'=>'queued']); $client->startBacktest($b); return back()->with('status','Backtest queued.'); }
     public function deploy(Request $r, AiModel $model){ $r->validate(['mode'=>'required|in:paper,shadow,live']); if ($r->mode==='live') AiModel::where('status','live')->whereKeyNot($model->id)->update(['status'=>'approved']); $model->update(['status'=>$r->mode==='live'?'live':$r->mode]); return back()->with('status',"Model deployment state changed to {$model->fresh()->status}."); }
+    public function diagnose()
+    {
+        $issues = [];
+
+        foreach (['ai_service_url', 'ai_service_token', 'ai_market_data_provider'] as $key) {
+            if (! Setting::getValue($key)) {
+                $issues[] = "Missing setting: {$key}";
+            }
+        }
+
+        $provider = strtolower((string) (Setting::getValue('ai_market_data_provider') ?: 'oanda'));
+        if ($provider === 'oanda') {
+            foreach (['oanda_api_token', 'oanda_account_id'] as $key) {
+                if (! Setting::getValue($key)) {
+                    $issues[] = "Missing OANDA setting: {$key}";
+                }
+            }
+        } elseif (in_array($provider, ['twelve', 'twelvedata', 'twelve_data'], true)) {
+            if (! Setting::getValue('twelve_data_api_key') && ! Setting::getValue('market_data_api_key')) {
+                $issues[] = 'Missing Twelve Data / market data API key.';
+            }
+        } else {
+            $issues[] = "Unsupported AI market-data provider: {$provider}";
+        }
+
+        $latestRun = AiTrainingRun::latest('created_at')->first();
+        $latestSignal = \App\Models\AiSignal::latest('generated_at')->first();
+        $latestBacktest = AiBacktest::latest('created_at')->first();
+
+        return back()->with([
+            'status' => empty($issues) ? 'AI diagnostics completed. No configuration gaps found.' : 'AI diagnostics found configuration gaps.',
+            'ai_diag_admin' => [
+                'issues' => $issues,
+                'latest_run' => $latestRun?->status,
+                'latest_signal' => $latestSignal?->generated_at?->diffForHumans(),
+                'latest_backtest' => $latestBacktest?->status,
+            ],
+        ]);
+    }
 }

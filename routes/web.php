@@ -64,6 +64,7 @@ Route::middleware(['auth', 'can:access-admin'])->prefix('admin')->name('admin.')
     Route::post('/ai-lab/training-runs', [AiLabController::class, 'train'])->name('ai-lab.train');
     Route::post('/ai-lab/backtests', [AiLabController::class, 'backtest'])->name('ai-lab.backtest');
     Route::post('/ai-lab/models/{model}/deploy', [AiLabController::class, 'deploy'])->name('ai-lab.models.deploy');
+    Route::post('/ai-lab/diagnose', [AiLabController::class, 'diagnose'])->name('ai-lab.diagnose');
 
     Route::get('/broker-certification', [BrokerCertificationController::class, 'index'])->name('broker-certification.index');
     Route::post('/broker-certification/{account}/run', [BrokerCertificationController::class, 'run'])->name('broker-certification.run');
