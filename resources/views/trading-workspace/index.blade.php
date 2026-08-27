@@ -41,6 +41,11 @@
             </div>
 
             <div class="bg-panel border border-line rounded-lg p-5">
+                <p class="font-mono text-[11px] tracking-[0.15em] text-muted mb-3">MARKET ANALYSIS</p>
+                <div id="analysis-card" class="text-sm text-muted">Loading analysis…</div>
+            </div>
+
+            <div class="bg-panel border border-line rounded-lg p-5">
                 <p class="font-mono text-[11px] tracking-[0.15em] text-muted mb-3">BROKER STATE</p>
                 <div id="broker-card" class="text-sm text-muted">Loading broker snapshot…</div>
             </div>
@@ -138,6 +143,28 @@ async function loadSignal() {
     }
 }
 
+async function loadAnalysis() {
+    const symbol = currentSymbol();
+    const r = await fetch(`/api/workspace/analysis?symbol=${encodeURIComponent(symbol)}&timeframe=H1&limit=300`);
+    const d = await r.json();
+    const el = document.getElementById('analysis-card');
+    if (!d.ready) {
+        el.innerHTML = `<div class="text-muted">${d.message ?? 'Analysis unavailable'}</div>`;
+        return;
+    }
+    el.innerHTML = `
+        <div class="grid grid-cols-2 gap-3">
+            <div><div class="text-xs text-muted">Last Price</div><div class="font-mono text-lg">${Number(d.last_price).toFixed(5)}</div></div>
+            <div><div class="text-xs text-muted">Bias</div><div class="font-medium">${d.signal_bias}</div></div>
+            <div><div class="text-xs text-muted">RSI 14</div><div class="font-mono">${d.rsi14 ? Number(d.rsi14).toFixed(2) : '—'}</div></div>
+            <div><div class="text-xs text-muted">ATR 14</div><div class="font-mono">${d.atr14 ? Number(d.atr14).toFixed(5) : '—'}</div></div>
+            <div><div class="text-xs text-muted">MA 20</div><div class="font-mono">${d.ma20 ? Number(d.ma20).toFixed(5) : '—'}</div></div>
+            <div><div class="text-xs text-muted">MA 50</div><div class="font-mono">${d.ma50 ? Number(d.ma50).toFixed(5) : '—'}</div></div>
+        </div>
+        <div class="mt-3 text-xs text-muted">Regime: ${d.regime} · Candles: ${d.candle_count}</div>
+    `;
+}
+
 async function loadBroker() {
     const r = await fetch('/api/workspace/positions');
     const positions = await r.json();
@@ -164,6 +191,7 @@ async function refreshAll() {
     try {
         await loadCandles();
         await loadSignal();
+        await loadAnalysis();
         await loadBroker();
         await loadPerformance();
     } catch (e) {

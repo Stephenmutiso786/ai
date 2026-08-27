@@ -8,6 +8,7 @@ use App\Models\AiModel;
 use App\Models\AiTrainingRun;
 use App\Models\Setting;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\DB;
 use App\Services\AI\AiLabClient;
 use Illuminate\Http\Request;
 
@@ -27,7 +28,61 @@ class AiLabController extends Controller
     public function storeDataset(Request $r){ $d=$r->validate(['name'=>'required|string|max:150','provider'=>'nullable|string|max:100','instrument_symbol'=>'nullable|string|max:30','timeframe'=>'nullable|string|max:20','starts_at'=>'nullable|date','ends_at'=>'nullable|date','storage_uri'=>'nullable|string|max:500']); AiDataset::create($d+['created_by'=>auth()->id(),'status'=>'draft']); return back()->with('status','Dataset registered. Validate and ingest it through the data service before training.'); }
     public function models(){ return view('admin.ai-lab.models',['models'=>AiModel::latest()->paginate(25),'datasets'=>AiDataset::where('status','ready')->orderBy('name')->get()]); }
     public function storeModel(Request $r){ $d=$r->validate(['name'=>'required|string|max:150','version'=>'required|string|max:50','framework'=>'required|string|max:50','notes'=>'nullable|string']); $m=AiModel::create($d+['created_by'=>auth()->id(),'status'=>'draft']); return back()->with('status',"Model {$m->name} {$m->version} created."); }
-    public function train(Request $r, AiLabClient $client){ $d=$r->validate(['ai_model_id'=>'required|exists:ai_models,id','ai_dataset_id'=>'nullable|exists:ai_datasets,id','config'=>'nullable|array']); $run=AiTrainingRun::create($d+['requested_by'=>auth()->id(),'status'=>'queued']); $client->startTraining($run); return back()->with('status','Training run queued.'); }
+    public function train(Request $r, AiLabClient $client)
+    {
+        $d = $r->validate([
+            'ai_model_id' => 'required|exists:ai_models,id',
+            'ai_dataset_id' => 'nullable|exists:ai_datasets,id',
+            'config' => 'nullable|array',
+        ]);
+
+        if (empty($d['ai_dataset_id'])) {
+            $symbol = strtoupper((string) data_get($d, 'config.local_symbol', ''));
+            $timeframe = strtoupper((string) data_get($d, 'config.local_timeframe', ''));
+            if ($symbol && $timeframe) {
+                $rows = DB::table('market_data_candles')
+                    ->where('symbol', $symbol)
+                    ->where('timeframe', $timeframe)
+                    ->orderBy('time')
+                    ->get(['time', 'open', 'high', 'low', 'close', 'volume']);
+
+                if ($rows->isNotEmpty()) {
+                    File::ensureDirectoryExists(storage_path('app/ai/datasets'));
+                    $uri = storage_path('app/ai/datasets/'.strtolower($symbol).'-'.strtolower($timeframe).'-'.now()->format('YmdHis').'.csv');
+                    $fp = fopen($uri, 'w');
+                    fwrite($fp, "timestamp,open,high,low,close,volume\n");
+                    foreach ($rows as $row) {
+                        fwrite($fp, implode(',', [
+                            optional($row->time)->format('Y-m-d H:i:s'),
+                            $row->open,
+                            $row->high,
+                            $row->low,
+                            $row->close,
+                            $row->volume ?? '',
+                        ])."\n");
+                    }
+                    fclose($fp);
+
+                    $dataset = \App\Models\AiDataset::create([
+                        'name' => "{$symbol} {$timeframe} local dataset",
+                        'provider' => 'local',
+                        'instrument_symbol' => $symbol,
+                        'timeframe' => $timeframe,
+                        'row_count' => $rows->count(),
+                        'storage_uri' => $uri,
+                        'status' => 'ready',
+                        'metadata' => ['source' => 'market_data_candles', 'created_via' => 'admin-train'],
+                        'created_by' => auth()->id(),
+                    ]);
+                    $d['ai_dataset_id'] = $dataset->id;
+                }
+            }
+        }
+
+        $run = AiTrainingRun::create($d + ['requested_by' => auth()->id(), 'status' => 'queued']);
+        $client->startTraining($run);
+        return back()->with('status', 'Training run queued.');
+    }
     public function backtest(Request $r, AiLabClient $client){ $d=$r->validate(['ai_model_id'=>'required|exists:ai_models,id','instrument_symbol'=>'required|string|max:30','timeframe'=>'required|string|max:20','starts_at'=>'required|date','ends_at'=>'required|date','config'=>'nullable|array']); $b=AiBacktest::create($d+['requested_by'=>auth()->id(),'status'=>'queued']); $client->startBacktest($b); return back()->with('status','Backtest queued.'); }
     public function deploy(Request $r, AiModel $model){ $r->validate(['mode'=>'required|in:paper,shadow,live']); if ($r->mode==='live') AiModel::where('status','live')->whereKeyNot($model->id)->update(['status'=>'approved']); $model->update(['status'=>$r->mode==='live'?'live':$r->mode]); return back()->with('status',"Model deployment state changed to {$model->fresh()->status}."); }
     public function diagnose()
