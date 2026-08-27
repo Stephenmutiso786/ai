@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Instrument;
+use App\Models\AiBacktest;
+use App\Models\AiSignal;
+use App\Models\AiTrainingRun;
 use App\Models\Trade;
 use App\Services\Execution\BrokerAdapterRegistry;
 use Illuminate\Support\Facades\Auth;
@@ -40,6 +43,18 @@ class DashboardController extends Controller
             }
         }
 
-        return view('dashboard.index', compact('instruments', 'openTrades', 'riskProfile', 'brokerAccount'));
+        $latestSignal = AiSignal::with('instrument')->latest('generated_at')->first();
+        $latestTrainingRun = AiTrainingRun::with(['model', 'dataset'])->latest('created_at')->first();
+        $latestBacktest = AiBacktest::with('model')->latest('created_at')->first();
+
+        return view('dashboard.index', compact(
+            'instruments',
+            'openTrades',
+            'riskProfile',
+            'brokerAccount',
+            'latestSignal',
+            'latestTrainingRun',
+            'latestBacktest'
+        ));
     }
 }

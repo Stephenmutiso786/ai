@@ -74,6 +74,45 @@
         @endforeach
     </div>
 
+    @if(auth()->user()->isAdmin())
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+            <div class="bg-panel border border-line rounded-lg p-5">
+                <p class="font-mono text-[11px] tracking-wide text-muted mb-2">LAST SIGNAL</p>
+                @if($latestSignal)
+                    <p class="text-lg font-medium">{{ strtoupper($latestSignal->direction) }} {{ $latestSignal->instrument?->symbol }}</p>
+                    <p class="text-sm text-muted font-mono mt-1">confidence {{ $latestSignal->confidence }}% · {{ $latestSignal->generated_at?->diffForHumans() }}</p>
+                    <p class="text-xs text-muted mt-2">{{ $latestSignal->reasoning }}</p>
+                @else
+                    <p class="text-sm text-muted">No signal has been generated yet.</p>
+                @endif
+            </div>
+            <div class="bg-panel border border-line rounded-lg p-5">
+                <p class="font-mono text-[11px] tracking-wide text-muted mb-2">LAST TRAINING RUN</p>
+                @if($latestTrainingRun)
+                    <p class="text-lg font-medium">{{ $latestTrainingRun->model?->name ?? 'Model' }} {{ $latestTrainingRun->model?->version }}</p>
+                    <p class="text-sm text-muted font-mono mt-1">{{ strtoupper($latestTrainingRun->status) }} · {{ $latestTrainingRun->created_at?->diffForHumans() }}</p>
+                    @if($latestTrainingRun->error_message)
+                        <p class="text-xs text-loss mt-2">{{ $latestTrainingRun->error_message }}</p>
+                    @endif
+                @else
+                    <p class="text-sm text-muted">No training runs yet.</p>
+                @endif
+            </div>
+            <div class="bg-panel border border-line rounded-lg p-5">
+                <p class="font-mono text-[11px] tracking-wide text-muted mb-2">LAST BACKTEST</p>
+                @if($latestBacktest)
+                    <p class="text-lg font-medium">{{ $latestBacktest->model?->name ?? 'Model' }} · {{ $latestBacktest->instrument_symbol }}</p>
+                    <p class="text-sm text-muted font-mono mt-1">{{ strtoupper($latestBacktest->status) }} · {{ $latestBacktest->created_at?->diffForHumans() }}</p>
+                    @if($latestBacktest->error_message)
+                        <p class="text-xs text-loss mt-2">{{ $latestBacktest->error_message }}</p>
+                    @endif
+                @else
+                    <p class="text-sm text-muted">No backtests yet.</p>
+                @endif
+            </div>
+        </div>
+    @endif
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- AI Market Status -->
         <div class="lg:col-span-2 bg-panel border border-line rounded-lg overflow-hidden">

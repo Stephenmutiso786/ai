@@ -12,9 +12,13 @@ use Illuminate\Http\Request;
 class AiLabController extends Controller
 {
     public function index(){
+        $latestTrainingRun = AiTrainingRun::with(['model', 'dataset'])->latest('created_at')->first();
+        $latestBacktest = AiBacktest::with('model')->latest('created_at')->first();
         return view('admin.ai-lab.index', [
             'stats'=>['models'=>AiModel::count(),'live'=>AiModel::where('status','live')->count(),'training'=>AiTrainingRun::whereIn('status',['queued','running'])->count(),'backtests'=>AiBacktest::where('status','completed')->count()],
             'models'=>AiModel::latest()->limit(20)->get(), 'runs'=>AiTrainingRun::with(['model','dataset'])->latest()->limit(15)->get(), 'backtests'=>AiBacktest::with('model')->latest()->limit(15)->get(),
+            'latestTrainingRun' => $latestTrainingRun,
+            'latestBacktest' => $latestBacktest,
         ]);
     }
     public function datasets(){ return view('admin.ai-lab.datasets',['datasets'=>AiDataset::latest()->paginate(25)]); }
