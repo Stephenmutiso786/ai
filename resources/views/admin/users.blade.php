@@ -29,7 +29,7 @@
                     <tr>
                         <td class="px-5 py-3">{{ $user->name }}</td>
                         <td class="px-5 py-3 text-muted">{{ $user->email }}</td>
-                        <td class="px-5 py-3 font-mono text-xs">{{ strtoupper($user->role) }}</td>
+                        <td class="px-5 py-3 font-mono text-xs">{{ $user->roleLabel() }}</td>
                         <td class="px-5 py-3 font-mono text-xs">{{ $user->isSuperAdmin() ? 'YES' : 'NO' }}</td>
                         <td class="px-5 py-3 font-mono text-xs">{{ strtoupper($user->kyc_status) }}</td>
                         <td class="px-5 py-3">{{ $user->subscription?->plan?->name ?? '—' }}</td>

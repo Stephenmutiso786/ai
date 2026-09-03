@@ -8,6 +8,11 @@ use Illuminate\Http\Request;
 
 class PlanController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:manage-plans');
+    }
+
     public function index()
     {
         $plans = SubscriptionPlan::where('is_custom_template', false)->orderBy('price_usd_weekly')->get();

@@ -14,15 +14,20 @@
         <div>
             <label class="font-mono text-xs text-muted block mb-1.5">ROLE</label>
             <select name="role" class="w-full bg-panel border border-line rounded px-3 py-2.5 text-sm focus:border-brass outline-none">
-                <option value="client" {{ $user->role === 'client' ? 'selected' : '' }}>Client</option>
-                <option value="admin" {{ $user->role === 'admin' ? 'selected' : '' }}>Admin</option>
+                @foreach(\App\Models\User::roleOptions() as $role => $meta)
+                    @if($role !== 'super_admin' || auth()->user()->isSuperAdmin())
+                        <option value="{{ $role }}" {{ $user->role === $role ? 'selected' : '' }}>{{ $meta['label'] ?? ucfirst($role) }}</option>
+                    @endif
+                @endforeach
             </select>
         </div>
 
-        <label class="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="is_super_admin" value="1" {{ $user->isSuperAdmin() ? 'checked' : '' }} class="accent-brass">
-            Super admin access
-        </label>
+        @if(auth()->user()->isSuperAdmin())
+            <label class="flex items-center gap-2 text-sm">
+                <input type="checkbox" name="is_super_admin" value="1" {{ $user->isSuperAdmin() ? 'checked' : '' }} class="accent-brass">
+                Super admin access
+            </label>
+        @endif
 
         <div>
             <label class="font-mono text-xs text-muted block mb-1.5">KYC STATUS</label>

@@ -14,6 +14,11 @@ use Illuminate\Http\Request;
 
 class AiLabController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:manage-ai-lab');
+    }
+
     public function index(){
         $latestTrainingRun = AiTrainingRun::with(['model', 'dataset'])->latest('created_at')->first();
         $latestBacktest = AiBacktest::with('model')->latest('created_at')->first();
@@ -32,7 +37,50 @@ class AiLabController extends Controller
         ]);
     }
     public function datasets(){ return view('admin.ai-lab.datasets',['datasets'=>AiDataset::latest()->paginate(25)]); }
-    public function storeDataset(Request $r){ $d=$r->validate(['name'=>'required|string|max:150','provider'=>'nullable|string|max:100','instrument_symbol'=>'nullable|string|max:30','timeframe'=>'nullable|string|max:20','starts_at'=>'nullable|date','ends_at'=>'nullable|date','storage_uri'=>'nullable|string|max:500']); AiDataset::create($d+['created_by'=>auth()->id(),'status'=>'draft']); return back()->with('status','Dataset registered. Validate and ingest it through the data service before training.'); }
+    public function storeDataset(Request $r)
+    {
+        $d = $r->validate([
+            'name' => 'required|string|max:150',
+            'provider' => 'nullable|string|max:100',
+            'instrument_symbol' => 'nullable|string|max:30',
+            'timeframe' => 'nullable|string|max:20',
+            'starts_at' => 'nullable|date',
+            'ends_at' => 'nullable|date',
+            'storage_uri' => 'nullable|string|max:500',
+            'upload_file' => 'nullable|file|mimes:csv,txt|max:20480',
+            'pasted_data' => 'nullable|string',
+        ]);
+
+        $storageUri = $d['storage_uri'] ?? null;
+        $rowCount = null;
+        $metadata = ['source' => 'manual'];
+
+        if ($r->hasFile('upload_file')) {
+            File::ensureDirectoryExists(storage_path('app/ai/datasets'));
+            $uploaded = $r->file('upload_file');
+            $storageUri = $uploaded->storeAs('ai/datasets', now()->format('YmdHis').'-'.$uploaded->getClientOriginalName());
+            $storageUri = storage_path('app/'.$storageUri);
+            $rowCount = $this->countCsvRows($storageUri);
+            $metadata['upload_name'] = $uploaded->getClientOriginalName();
+            $metadata['source'] = 'upload';
+        } elseif (! empty(trim((string) ($d['pasted_data'] ?? '')))) {
+            File::ensureDirectoryExists(storage_path('app/ai/datasets'));
+            $storageUri = storage_path('app/ai/datasets/paste-'.now()->format('YmdHis').'.csv');
+            file_put_contents($storageUri, $this->normalizePastedData($d['pasted_data']));
+            $rowCount = $this->countCsvRows($storageUri);
+            $metadata['source'] = 'paste';
+        }
+
+        AiDataset::create($d + [
+            'row_count' => $rowCount,
+            'storage_uri' => $storageUri,
+            'metadata' => $metadata,
+            'created_by' => auth()->id(),
+            'status' => 'ready',
+        ]);
+
+        return back()->with('status', 'Dataset saved and ready for training.');
+    }
     public function models(){ return view('admin.ai-lab.models',['models'=>AiModel::latest()->paginate(25),'datasets'=>AiDataset::where('status','ready')->orderBy('name')->get()]); }
     public function storeModel(Request $r){ $d=$r->validate(['name'=>'required|string|max:150','version'=>'required|string|max:50','framework'=>'required|string|max:50','notes'=>'nullable|string']); $m=AiModel::create($d+['created_by'=>auth()->id(),'status'=>'draft']); return back()->with('status',"Model {$m->name} {$m->version} created."); }
     public function train(Request $r, AiLabClient $client)
@@ -172,5 +220,36 @@ class AiLabController extends Controller
             ],
             'latestHealthChecks' => DB::table('system_health_checks')->orderByDesc('checked_at')->limit(10)->get(),
         ]);
+    }
+
+    private function normalizePastedData(string $input): string
+    {
+        $text = trim($input);
+        $text = str_replace(["\r\n", "\r"], "\n", $text);
+
+        if (! str_contains($text, "\n")) {
+            return $text;
+        }
+
+        $lines = array_values(array_filter(array_map('trim', explode("\n", $text))));
+        $first = strtolower($lines[0] ?? '');
+        $headerLooksValid = str_contains($first, 'timestamp') || str_contains($first, 'open') || str_contains($first, 'close');
+
+        if (! $headerLooksValid) {
+            array_unshift($lines, 'timestamp,open,high,low,close,volume');
+        }
+
+        return implode("\n", $lines)."\n";
+    }
+
+    private function countCsvRows(string $path): int
+    {
+        if (! File::exists($path)) {
+            return 0;
+        }
+
+        $rows = array_filter(file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES));
+
+        return max(count($rows) - 1, 0);
     }
 }

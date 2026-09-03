@@ -57,7 +57,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/custom-package', [CustomPlanRequestController::class, 'store'])->name('custom-package.store');
 });
 
-Route::middleware(['auth', 'can:access-admin'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [ControlCenterController::class, 'index'])->name('control-center');
     Route::post('/emergency-stop', [ControlCenterController::class, 'emergencyStopAll'])->name('emergency-stop');
 

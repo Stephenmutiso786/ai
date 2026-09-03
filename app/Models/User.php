@@ -29,12 +29,43 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'two_factor_confirmed_at' => 'datetime',
+            'is_super_admin' => 'boolean',
         ];
+    }
+
+    public static function roleOptions(): array
+    {
+        return config('roles');
+    }
+
+    public function roleLabel(): string
+    {
+        return config("roles.{$this->role}.label", ucfirst(str_replace('_', ' ', (string) $this->role)));
+    }
+
+    public function permissions(): array
+    {
+        if ($this->role === 'super_admin' && ! $this->isSuperAdmin()) {
+            return [];
+        }
+
+        $permissions = config("roles.{$this->role}.permissions", []);
+
+        return array_values(array_filter($permissions, fn ($permission) => $permission !== '*' || $this->isSuperAdmin()));
+    }
+
+    public function canPerform(string $permission): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return in_array($permission, $this->permissions(), true);
     }
 
     public function isAdmin(): bool
     {
-        return $this->role === 'admin' || $this->isSuperAdmin();
+        return $this->isSuperAdmin() || $this->role === 'admin';
     }
 
     public function isSuperAdmin(): bool

@@ -25,17 +25,35 @@
                 </form>
             </div>
 
-            @if(auth()->user()?->isAdmin())
+            @can('view-admin-dashboard')
                 <div>
-                    <p class="px-5 font-mono text-[10px] tracking-[0.15em] text-brass mb-2">SUPER ADMIN</p>
-                    <a href="{{ route('admin.control-center') }}" class="flex items-center gap-2.5 px-5 py-2 text-sm {{ request()->routeIs('admin.control-center') ? 'text-brass bg-ink' : 'text-slate-300 hover:bg-ink/60' }}">Control center</a>
-                    <a href="{{ route('admin.ai-lab.index') }}" class="flex items-center gap-2.5 px-5 py-2 text-sm {{ request()->routeIs('admin.ai-lab.*') ? 'text-brass bg-ink' : 'text-slate-300 hover:bg-ink/60' }}">AI Lab</a>
-                    <a href="{{ route('admin.users.index') }}" class="flex items-center gap-2.5 px-5 py-2 text-sm {{ request()->routeIs('admin.users.*') ? 'text-brass bg-ink' : 'text-slate-300 hover:bg-ink/60' }}">Users</a>
-                    <a href="{{ route('admin.plans.index') }}" class="flex items-center gap-2.5 px-5 py-2 text-sm {{ request()->routeIs('admin.plans.*') ? 'text-brass bg-ink' : 'text-slate-300 hover:bg-ink/60' }}">Plans</a>
-                    <a href="{{ route('admin.custom-requests.index') }}" class="flex items-center gap-2.5 px-5 py-2 text-sm {{ request()->routeIs('admin.custom-requests.*') ? 'text-brass bg-ink' : 'text-slate-300 hover:bg-ink/60' }}">Custom requests</a>
-                    <a href="{{ route('admin.settings') }}" class="flex items-center gap-2.5 px-5 py-2 text-sm {{ request()->routeIs('admin.settings') ? 'text-brass bg-ink' : 'text-slate-300 hover:bg-ink/60' }}">Settings / API keys</a>
+                    <p class="px-5 font-mono text-[10px] tracking-[0.15em] text-brass mb-2">ADMIN</p>
+                    @can('view-admin-dashboard')
+                        <a href="{{ route('admin.control-center') }}" class="flex items-center gap-2.5 px-5 py-2 text-sm {{ request()->routeIs('admin.control-center') ? 'text-brass bg-ink' : 'text-slate-300 hover:bg-ink/60' }}">Control center</a>
+                    @endcan
+                    @can('manage-ai-lab')
+                        <a href="{{ route('admin.ai-lab.index') }}" class="flex items-center gap-2.5 px-5 py-2 text-sm {{ request()->routeIs('admin.ai-lab.*') ? 'text-brass bg-ink' : 'text-slate-300 hover:bg-ink/60' }}">AI Lab</a>
+                    @endcan
+                    @can('manage-users')
+                        <a href="{{ route('admin.users.index') }}" class="flex items-center gap-2.5 px-5 py-2 text-sm {{ request()->routeIs('admin.users.*') ? 'text-brass bg-ink' : 'text-slate-300 hover:bg-ink/60' }}">Users</a>
+                    @endcan
+                    @can('manage-plans')
+                        <a href="{{ route('admin.plans.index') }}" class="flex items-center gap-2.5 px-5 py-2 text-sm {{ request()->routeIs('admin.plans.*') ? 'text-brass bg-ink' : 'text-slate-300 hover:bg-ink/60' }}">Plans</a>
+                    @endcan
+                    @can('manage-custom-requests')
+                        <a href="{{ route('admin.custom-requests.index') }}" class="flex items-center gap-2.5 px-5 py-2 text-sm {{ request()->routeIs('admin.custom-requests.*') ? 'text-brass bg-ink' : 'text-slate-300 hover:bg-ink/60' }}">Custom requests</a>
+                    @endcan
+                    @can('manage-settings')
+                        <a href="{{ route('admin.settings') }}" class="flex items-center gap-2.5 px-5 py-2 text-sm {{ request()->routeIs('admin.settings') ? 'text-brass bg-ink' : 'text-slate-300 hover:bg-ink/60' }}">Settings / API keys</a>
+                    @endcan
+                    @can('manage-broker-certification')
+                        <a href="{{ route('admin.broker-certification.index') }}" class="flex items-center gap-2.5 px-5 py-2 text-sm {{ request()->routeIs('admin.broker-certification.*') ? 'text-brass bg-ink' : 'text-slate-300 hover:bg-ink/60' }}">Broker certification</a>
+                    @endcan
+                    @can('manage-operations')
+                        <a href="{{ route('admin.operations.index') }}" class="flex items-center gap-2.5 px-5 py-2 text-sm {{ request()->routeIs('admin.operations.*') ? 'text-brass bg-ink' : 'text-slate-300 hover:bg-ink/60' }}">Operations</a>
+                    @endcan
                 </div>
-            @endif
+            @endcan
         </nav>
 
         <div class="px-5 py-4 border-t border-line flex items-center justify-between">
@@ -52,4 +70,3 @@
 </div>
 
 @endsection
-

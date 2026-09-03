@@ -10,11 +10,13 @@
     @endif
     @if(session('run_error'))
         <div class="mb-6 border border-loss/40 bg-loss/10 text-loss text-sm rounded px-4 py-3">{{ session('run_error') }}</div>
-        @if(auth()->user()->isAdmin() && session('run_error_admin'))
+        @can('view-admin-dashboard')
+        @if(session('run_error_admin'))
             <div class="mb-6 border border-line bg-ink/60 text-muted text-xs rounded px-4 py-3 font-mono">
                 Admin detail: {{ session('run_error_admin') }}
             </div>
         @endif
+        @endcan
     @endif
 
     <!-- Usage / run status -->
@@ -81,31 +83,35 @@
         @endforeach
     </div>
 
-    <div class="bg-panel border border-line rounded-lg p-5 mb-8">
-        <div class="flex items-center justify-between gap-3 mb-4">
-            <div>
-                <p class="font-mono text-[11px] tracking-wide text-muted">LIVE DIAGNOSTICS</p>
-                <p class="text-sm text-muted mt-1">Real status from candle sync, model availability, provider config, and the latest signal.</p>
-            </div>
-            <a href="{{ route('admin.settings') }}" class="text-xs text-brass hover:underline">Edit settings</a>
-        </div>
-        <div class="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
-            @foreach ($diagnostics as $key => $item)
-                <div class="border rounded-lg p-4 {{ $item['status'] === 'ok' ? 'border-gain/30 bg-gain/5' : 'border-loss/30 bg-loss/5' }}">
-                    <div class="flex items-center justify-between gap-3">
-                        <p class="font-mono text-[10px] tracking-wide text-muted">{{ strtoupper(str_replace('_', ' ', $key)) }}</p>
-                        <span class="font-mono text-[10px] px-2 py-0.5 rounded border {{ $item['status'] === 'ok' ? 'border-gain/40 text-gain' : 'border-loss/40 text-loss' }}">
-                            {{ strtoupper($item['status']) }}
-                        </span>
-                    </div>
-                    <p class="mt-3 text-sm">{{ $item['label'] }}</p>
-                    <p class="mt-2 text-xs text-muted">{{ $item['detail'] }}</p>
+    @can('view-admin-dashboard')
+        <div class="bg-panel border border-line rounded-lg p-5 mb-8">
+            <div class="flex items-center justify-between gap-3 mb-4">
+                <div>
+                    <p class="font-mono text-[11px] tracking-wide text-muted">LIVE DIAGNOSTICS</p>
+                    <p class="text-sm text-muted mt-1">Real status from candle sync, model availability, provider config, and the latest signal.</p>
                 </div>
-            @endforeach
+                @can('manage-settings')
+                    <a href="{{ route('admin.settings') }}" class="text-xs text-brass hover:underline">Edit settings</a>
+                @endcan
+            </div>
+            <div class="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
+                @foreach ($diagnostics as $key => $item)
+                    <div class="border rounded-lg p-4 {{ $item['status'] === 'ok' ? 'border-gain/30 bg-gain/5' : 'border-loss/30 bg-loss/5' }}">
+                        <div class="flex items-center justify-between gap-3">
+                            <p class="font-mono text-[10px] tracking-wide text-muted">{{ strtoupper(str_replace('_', ' ', $key)) }}</p>
+                            <span class="font-mono text-[10px] px-2 py-0.5 rounded border {{ $item['status'] === 'ok' ? 'border-gain/40 text-gain' : 'border-loss/40 text-loss' }}">
+                                {{ strtoupper($item['status']) }}
+                            </span>
+                        </div>
+                        <p class="mt-3 text-sm">{{ $item['label'] }}</p>
+                        <p class="mt-2 text-xs text-muted">{{ $item['detail'] }}</p>
+                    </div>
+                @endforeach
+            </div>
         </div>
-    </div>
+    @endcan
 
-    @if(auth()->user()->isAdmin())
+    @can('view-admin-dashboard')
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
             <div class="bg-panel border border-line rounded-lg p-5">
                 <p class="font-mono text-[11px] tracking-wide text-muted mb-2">LAST SIGNAL</p>
@@ -142,7 +148,7 @@
                 @endif
             </div>
         </div>
-    @endif
+    @endcan
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- AI Market Status -->

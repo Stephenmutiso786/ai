@@ -11,6 +11,11 @@ use Illuminate\Support\Facades\Auth;
 
 class CustomPlanRequestController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:manage-custom-requests');
+    }
+
     public function index()
     {
         $requests = CustomPlanRequest::with('user')->latest()->paginate(20);

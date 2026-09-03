@@ -17,14 +17,30 @@
                     <a href="{{ route('custom-package.create') }}" class="hover:text-slate-100">Custom package</a>
                     @auth
                         <a href="{{ route('two-factor.show') }}" class="hover:text-slate-100">Two-factor</a>
-                        @if(auth()->user()->isAdmin())
+                        @can('view-admin-dashboard')
                             <a href="{{ route('admin.control-center') }}" class="hover:text-brass">Control center</a>
+                        @endcan
+                        @can('manage-ai-lab')
                             <a href="{{ route('admin.ai-lab.index') }}" class="hover:text-brass">AI Lab</a>
+                        @endcan
+                        @can('manage-users')
                             <a href="{{ route('admin.users.index') }}" class="hover:text-brass">Users</a>
+                        @endcan
+                        @can('manage-plans')
                             <a href="{{ route('admin.plans.index') }}" class="hover:text-brass">Plans</a>
+                        @endcan
+                        @can('manage-custom-requests')
                             <a href="{{ route('admin.custom-requests.index') }}" class="hover:text-brass">Requests</a>
+                        @endcan
+                        @can('manage-settings')
                             <a href="{{ route('admin.settings') }}" class="hover:text-brass">Settings</a>
-                        @endif
+                        @endcan
+                        @can('manage-broker-certification')
+                            <a href="{{ route('admin.broker-certification.index') }}" class="hover:text-brass">Broker certification</a>
+                        @endcan
+                        @can('manage-operations')
+                            <a href="{{ route('admin.operations.index') }}" class="hover:text-brass">Operations</a>
+                        @endcan
                         <span class="font-mono text-xs text-slate-300 flex items-center gap-2">
                             {{ auth()->user()->name }}
                             @if(auth()->user()->isSuperAdmin())

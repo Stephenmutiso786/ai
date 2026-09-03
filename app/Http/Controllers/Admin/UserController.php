@@ -10,6 +10,11 @@ use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:manage-users');
+    }
+
     public function index()
     {
         $users = User::with(['subscription.plan', 'riskProfile'])->latest()->paginate(25);
@@ -27,16 +32,26 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $data = $request->validate([
-            'role' => 'required|in:client,admin',
+            'role' => ['required', 'string', 'in:'.implode(',', array_keys(config('roles')))],
             'is_super_admin' => 'sometimes|boolean',
             'kyc_status' => 'required|in:pending,verified,rejected',
             'subscription_plan_id' => 'nullable|exists:subscription_plans,id',
             'trading_halted' => 'sometimes|boolean',
         ]);
 
+        if (! $request->user()->isSuperAdmin() && $user->isSuperAdmin()) {
+            abort(403);
+        }
+
+        $targetSuperAdmin = $request->boolean('is_super_admin') || $data['role'] === 'super_admin';
+
+        if (! $request->user()->isSuperAdmin() && $targetSuperAdmin) {
+            abort(403);
+        }
+
         $user->update([
             'role' => $data['role'],
-            'is_super_admin' => $request->boolean('is_super_admin'),
+            'is_super_admin' => $targetSuperAdmin && $request->user()->isSuperAdmin(),
             'kyc_status' => $data['kyc_status'],
         ]);
 

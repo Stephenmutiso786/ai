@@ -15,6 +15,12 @@ use Illuminate\Support\Facades\DB;
 
 class ControlCenterController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:view-admin-dashboard')->only(['index']);
+        $this->middleware('can:manage-operations')->only(['emergencyStopAll']);
+    }
+
     public function index()
     {
         $stats = [

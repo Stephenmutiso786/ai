@@ -9,6 +9,11 @@ use Illuminate\Support\Facades\Auth;
 
 class SettingsController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('can:manage-settings');
+    }
+
     public function index()
     {
         $groups = config('integrations');
