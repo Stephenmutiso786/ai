@@ -34,7 +34,7 @@ Route::get('/payment/{subscription}/success', [PaymentController::class, 'succes
 Route::get('/payment/{subscription}/mpesa-waiting', [PaymentController::class, 'mpesaWaiting'])->middleware('auth')->name('payment.mpesa.waiting');
 Route::get('/payment/{subscription}/status', [PaymentController::class, 'pollStatus'])->middleware('auth')->name('payment.mpesa.status');
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'track.activity'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/run', [SignalRunController::class, 'run'])->middleware('market.open')->name('run.trigger');
     Route::post('/dashboard/refresh-signals', [DashboardController::class, 'refreshSignals'])->middleware('market.open')->name('dashboard.refresh-signals');
@@ -57,7 +57,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/custom-package', [CustomPlanRequestController::class, 'store'])->name('custom-package.store');
 });
 
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'track.activity'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [ControlCenterController::class, 'index'])->name('control-center');
     Route::post('/emergency-stop', [ControlCenterController::class, 'emergencyStopAll'])->name('emergency-stop');
 

@@ -11,6 +11,24 @@
                 </div>
             </div>
             <div class="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center lg:justify-end text-sm text-muted">
+                @auth
+                    <div class="flex items-center gap-2 rounded border border-line bg-ink/50 px-3 py-2 text-xs" title="Users active in the last five minutes">
+                        <span class="h-2 w-2 rounded-full bg-gain animate-pulse"></span>
+                        <span class="font-mono text-slate-300">ONLINE {{ $onlineUsers?->count() ?? 0 }}</span>
+                        <span class="hidden xl:inline text-muted">|</span>
+                        <span class="hidden xl:flex flex-wrap gap-x-3 gap-y-1">
+                            @forelse($onlineUsers ?? [] as $onlineUser)
+                                <span class="inline-flex items-center gap-1 text-muted">
+                                    <span class="h-1.5 w-1.5 rounded-full bg-gain"></span>
+                                    {{ $onlineUser->name }}
+                                    <span class="text-[10px] text-brass">{{ $onlineUser->isSuperAdmin() ? 'Super Admin' : $onlineUser->roleLabel() }}</span>
+                                </span>
+                            @empty
+                                <span>No active users</span>
+                            @endforelse
+                        </span>
+                    </div>
+                @endauth
                 <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
                     <a href="{{ route('dashboard') }}" class="hover:text-slate-100">Dashboard</a>
                     <a href="{{ route('broker.connect') }}" class="hover:text-slate-100">Broker</a>

@@ -3,6 +3,7 @@
 use App\Http\Middleware\AssignDeviceCookie;
 use App\Http\Middleware\DetectCurrency;
 use App\Http\Middleware\EnsureMarketIsOpen;
+use App\Http\Middleware\TrackUserActivity;
 use App\Http\Middleware\TrustProxies;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -18,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'live.trading.confirm' => \App\Http\Middleware\RequireLiveTradingConfirmation::class,
             'market.open' => EnsureMarketIsOpen::class,
+            'track.activity' => TrackUserActivity::class,
         ]);
         $middleware->web(append: [
             TrustProxies::class,

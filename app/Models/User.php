@@ -30,6 +30,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'two_factor_confirmed_at' => 'datetime',
             'is_super_admin' => 'boolean',
+            'last_seen_at' => 'datetime',
         ];
     }
 
